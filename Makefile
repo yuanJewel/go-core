@@ -51,7 +51,7 @@ fmt-check:
 clean:
 	@echo "Cleaning"
 	@go clean
-	@if [ -d target ] ; then rm -rf target ; fi
+	@if [ -d build ] ; then rm -rf build ; fi
 
 ## bindata: package static resources
 bindata:
@@ -63,7 +63,7 @@ test: bindata
 
 ## build: build the application to registry
 build: bindata clean
-	@go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o target/$(APP)
+	@go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)
 
 ## run: runs go run main.go
 run:
@@ -73,20 +73,20 @@ run:
 compile:
 	@# 32-Bit Systems
 	@# FreeBDS
-	@GOOS=freebsd GOARCH=386 go build -o target/$(APP)-freebsd-386 main.go
+	@GOOS=freebsd GOARCH=386 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-freebsd-386 main.go
 	@# Linux
-	@GOOS=linux GOARCH=386 go build -o target/$(APP)-linux-386 main.go
+	@GOOS=linux GOARCH=386 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-linux-386 main.go
 	@# Windows
-	@GOOS=windows GOARCH=386 go build -o target/$(APP)-windows-386 main.go
+	@GOOS=windows GOARCH=386 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-windows-386 main.go
 	@# 64-Bit
 	@# FreeBDS
-	@GOOS=freebsd GOARCH=amd64 go build -o target/$(APP)-freebsd-amd64 main.go
+	@GOOS=freebsd GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-freebsd-amd64 main.go
 	@# MacOS
-	@GOOS=darwin GOARCH=amd64 go build -o target/$(APP)-darwin-amd64 main.go
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-darwin-amd64 main.go
 	@# Linux
-	@GOOS=linux GOARCH=amd64 go build -o target/$(APP)-linux-amd64 main.go
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-linux-amd64 main.go
 	@# Windows
-	@GOOS=windows GOARCH=amd64 go build -o target/$(APP)-windows-amd64 main.go
+	@GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-windows-amd64 main.go
 
 help:
 	@echo "Usage: \n"
