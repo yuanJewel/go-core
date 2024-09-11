@@ -1,7 +1,6 @@
 package api
 
 import (
-	_ "github.com/SmartLyu/go-core/docs"
 	"github.com/SmartLyu/go-core/logger"
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/iris-contrib/swagger/v12"
@@ -11,6 +10,7 @@ import (
 	"github.com/kataras/iris/v12/middleware/jwt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"log"
 )
 
 type UserClaims struct {
@@ -130,4 +130,5 @@ func (Object) Dot(i ...interface{}) {
 	//uri = ctx.Path()
 	//method = ctx.Method()
 	)
+	log.Println(i)
 }

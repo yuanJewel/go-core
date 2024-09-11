@@ -98,4 +98,7 @@ before-push-code: list mod-tidy vet fmt fmt-check
 ## all: execut test、build、docker-build、docker-push targets
 all: vet fmt fmt-check test build
 
+## init:
+init: swag-build bindata mod-config mod-vendor
+
 .PHONY: before-push-code all

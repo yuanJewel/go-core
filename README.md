@@ -1,5 +1,12 @@
 # go-core
 
+## 使用方法
+
+```shell
+make init   # 初始化本地环境，下载依赖包
+make run    # 运行任务
+```
+
 ## 目录结构
 
 ### api

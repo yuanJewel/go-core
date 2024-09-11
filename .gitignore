@@ -2,7 +2,8 @@
 build/
 dist/
 out/
-target/
+asset/
+docs/
 
 # 忽略日志文件目录
 logs/
