@@ -1,0 +1,31 @@
+# 忽略所有的编译产物目录
+build/
+dist/
+out/
+
+# 忽略日志文件目录
+logs/
+
+# 忽略IDE相关目录
+.idea/
+.vscode/
+
+# 虚拟环境
+venv/
+.node_modules/
+vendor/
+
+# 数据库文件
+.db/
+
+# 临时文件
+tmp/
+
+# MacOS系统目录元数据文件
+.DS_Store
+
+# Windows系统缩略图缓存文件
+Thumbs.db
+
+# 配置目录
+application.yml
