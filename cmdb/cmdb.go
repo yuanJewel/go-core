@@ -2,8 +2,8 @@ package cmdb
 
 import (
 	"errors"
+	"github.com/SmartLyu/go-core/config"
 	"github.com/SmartLyu/go-core/mysql"
-	"github.com/SmartLyu/go-core/pkg/config"
 	"strings"
 )
 

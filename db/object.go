@@ -11,22 +11,22 @@ type User struct {
 	LastLoginTime time.Time `gorm:"column:last_login_time;type:datetime" json:"last_login_time"`
 }
 
-//type AssetRecord struct {
-//	ID           int       `gorm:"column:id;type:int;primary_key;AUTO_INCREMENT" json:"id"`
-//	TranceId     string    `gorm:"column:trance_id;type:varchar(255)" json:"trance_id"`
-//	UpdateTime   time.Time `gorm:"column:update_time;type:datetime" json:"update_time"`
-//	UpdateUserId int       `gorm:"column:update_user_id;type:int" json:"update_user_id"`
-//	Url          string    `gorm:"column:url;type:varchar(255)" json:"url"`
-//	Body         string    `gorm:"column:body;type:varchar(255)" json:"body"`
-//	Context      string    `gorm:"column:context;type:text" json:"context"`
-//}
-//
-//type TableAffect struct {
-//	ID           int       `gorm:"column:id;type:int;primary_key;AUTO_INCREMENT" json:"id"`
-//	TranceId     string    `gorm:"column:trance_id;type:varchar(255)" json:"trance_id"`
-//	UpdateTime   time.Time `gorm:"column:update_time;type:datetime" json:"update_time"`
-//	UpdateUserId int       `gorm:"column:update_user_id;type:int" json:"update_user_id"`
-//	Table        string    `gorm:"column:table;type:varchar(255)" json:"table"`
-//	PrimaryId    string    `gorm:"column:primary_id;type:varchar(255)" json:"primary_id"`
-//	Action       string    `gorm:"column:action;type:varchar(255)" json:"action"`
-//}
+type AssetRecord struct {
+	ID           int       `gorm:"column:id;type:int;primary_key;AUTO_INCREMENT" json:"id"`
+	TranceId     string    `gorm:"column:trance_id;type:varchar(255)" json:"trance_id"`
+	UpdateTime   time.Time `gorm:"column:update_time;type:datetime" json:"update_time"`
+	UpdateUserId int       `gorm:"column:update_user_id;type:int" json:"update_user_id"`
+	Url          string    `gorm:"column:url;type:varchar(255)" json:"url"`
+	Body         string    `gorm:"column:body;type:varchar(255)" json:"body"`
+	Context      string    `gorm:"column:context;type:text" json:"context"`
+}
+
+type TableAffect struct {
+	ID           int       `gorm:"column:id;type:int;primary_key;AUTO_INCREMENT" json:"id"`
+	TranceId     string    `gorm:"column:trance_id;type:varchar(255)" json:"trance_id"`
+	UpdateTime   time.Time `gorm:"column:update_time;type:datetime" json:"update_time"`
+	UpdateUserId int       `gorm:"column:update_user_id;type:int" json:"update_user_id"`
+	Table        string    `gorm:"column:table;type:varchar(255)" json:"table"`
+	PrimaryId    string    `gorm:"column:primary_id;type:varchar(255)" json:"primary_id"`
+	Action       string    `gorm:"column:action;type:varchar(255)" json:"action"`
+}

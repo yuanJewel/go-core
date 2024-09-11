@@ -2,8 +2,8 @@ package mysql
 
 import (
 	"fmt"
+	"github.com/SmartLyu/go-core/config"
 	"github.com/SmartLyu/go-core/logger"
-	"github.com/SmartLyu/go-core/pkg/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"

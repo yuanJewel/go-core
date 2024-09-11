@@ -6,7 +6,7 @@ import (
 
 type CmdbService interface {
 	HealthCheck() error
-	Setup() error
+	Setup([]interface{}) error
 
 	GetTables() ([]string, error)
 	HasTable(string) bool

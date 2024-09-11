@@ -2,6 +2,7 @@
 build/
 dist/
 out/
+target/
 
 # 忽略日志文件目录
 logs/

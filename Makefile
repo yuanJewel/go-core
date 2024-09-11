@@ -74,8 +74,6 @@ compile:
 	@# 32-Bit Systems
 	@# FreeBDS
 	@GOOS=freebsd GOARCH=386 go build -o target/$(APP)-freebsd-386 main.go
-	@# MacOS
-	@GOOS=darwin GOARCH=386 go build -o target/$(APP)-darwin-386 main.go
 	@# Linux
 	@GOOS=linux GOARCH=386 go build -o target/$(APP)-linux-386 main.go
 	@# Windows

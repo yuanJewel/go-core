@@ -6,17 +6,13 @@ import (
 	"reflect"
 )
 
-func (this *Mysql) Setup() error {
+func (this *Mysql) Setup(models []interface{}) error {
 	var (
-		// Go retains no master list of structs, interfaces, or variables at the package level.
-		// Go has good reasons to propagate to let not slip 'magic' into your code.
-		// All table lists can only be registered manually
-		models = []interface{}{
-			// Platform
-			&db.User{},
-		}
 		notExistTables = []interface{}{}
 	)
+	models = append(models, []interface{}{
+		&db.AssetRecord{}, &db.TableAffect{}, &db.User{},
+	}...)
 	defer logger.Log.Infof("成功更新数据库，当前库中存在 %d 个数据表", len(models))
 
 	err := this.DbConn.AutoMigrate(models...)

@@ -8,6 +8,7 @@ import (
 	_ "github.com/SmartLyu/go-core/docs"
 	"github.com/SmartLyu/go-core/pkg/api"
 	"github.com/SmartLyu/go-core/pkg/config"
+	"github.com/SmartLyu/go-core/pkg/db"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/kataras/iris/v12"
 	"github.com/prometheus/common/version"
@@ -38,7 +39,8 @@ func init() {
 func main() {
 	var (
 		configPath = kingpin.Flag("config", "go-core config file,default application.yml").
-			Default("application.yml").Short('c').String()
+				Default("application.yml").Short('c').String()
+		initDb = kingpin.Flag("init", "是否初始化数据库").Short('i').Bool()
 	)
 	kingpin.Version(version.Print("go-core"))
 	kingpin.HelpFlag.Short('h')
@@ -46,6 +48,14 @@ func main() {
 
 	if err := config.LoadConfig(*configPath); err != nil {
 		log.Fatal("Load Config Error...", err)
+	}
+
+	if *initDb {
+		if err := db.SetupCmdb(&config.GlobalConfig.DataSourceDetail); err != nil {
+			log.Fatal("Init Database Error...", err)
+		}
+		log.Println("Init Database Success...")
+		return
 	}
 
 	if err := cmdb.InitCmdb(&config.GlobalConfig.DataSourceDetail); err != nil {
