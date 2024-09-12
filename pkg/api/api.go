@@ -17,6 +17,8 @@ func (Object) GetAuth() string {
 
 func (Object) Party(app iris.Party) {
 	app.Get("/", index).Name = "index"
+
+	app.OnErrorCode(iris.StatusNotFound, notFound)
 }
 
 func (Object) Health() func() map[string]error {
@@ -30,6 +32,12 @@ func (Object) Health() func() map[string]error {
 func index(ctx iris.Context) {
 	ctx.ViewData("message", "welcome to SmartLyu go-core")
 	if err := ctx.View("index.html"); err != nil {
+		return
+	}
+}
+
+func notFound(ctx iris.Context) {
+	if err := ctx.View("404.html"); err != nil {
 		return
 	}
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/SmartLyu/go-core/logger"
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/iris-contrib/swagger/v12"
@@ -123,12 +124,12 @@ func (Object) Health() func() map[string]error {
 
 func (Object) Dot(i ...interface{}) {
 	var (
-	//traceid = i[0].(string)
-	//username = i[1].(string)
-	//ctx      = i[2].(iris.Context)
-	//
-	//uri = ctx.Path()
-	//method = ctx.Method()
+		traceId  = i[0].(string)
+		username = i[1].(string)
+		ctx      = i[2].(iris.Context)
+
+		uri    = ctx.Path()
+		method = ctx.Method()
 	)
-	log.Println(i)
+	log.Println(fmt.Sprintf("Dot Functions: Trace(%s), User(%s), Uri(%s), Method(%s)", traceId, username, uri, method))
 }
