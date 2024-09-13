@@ -58,22 +58,21 @@ func ReturnErr(code int, ctx iris.Context, err error, response *Response) {
 		functionFile = ""
 		functionLine = 0
 	)
-	pc, _pc_file, _pc_line, ok := runtime.Caller(1)
+	pc, pcFile, pcLine, ok := runtime.Caller(1)
 	if ok {
 		functionName = runtime.FuncForPC(pc).Name()
-		functionFile = _pc_file
-		functionLine = _pc_line
+		functionFile = pcFile
+		functionLine = pcLine
 	}
 	errMsg := fmt.Sprintf("%s", err.Error())
 	logger.Log.WithField("traceId", response.TraceId).WithField("function", functionName).
 		WithField("callerFile", functionFile).WithField("callerLine", functionLine).Warnf(errMsg)
 	response.Code = code
-	response.Message = errMsg
-	response.Data = nil
+
 	if code == PermissionDeny {
 		ctx.StatusCode(http.StatusForbidden)
 	} else {
 		ctx.StatusCode(http.StatusNotImplemented)
 	}
-	_ = ctx.JSON(response)
+	ResponseBody(ctx, response, errMsg)
 }

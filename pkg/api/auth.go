@@ -89,8 +89,7 @@ func authenticate(ctx iris.Context) {
 	} else {
 		returnData["secret"] = _user.GoogleSecret
 	}
-	response.Data = returnData
-	_ = ctx.JSON(response)
+	apiInterface.ResponseBody(ctx, response, returnData)
 	logger.Log.Infof("user %s login successfully", auth_object.Username)
 }
 
@@ -185,14 +184,14 @@ func refresh(ctx iris.Context) {
 		apiInterface.ReturnErr(apiInterface.ParseTokenEorror, ctx, err, response)
 		return
 	}
-	_refresh_time := time.Unix(int64(iat), 0).Add(time.Duration(config.GlobalConfig.Auth.Refresh) * time.Minute).Unix()
-	if _refresh_time > time.Now().Unix() {
+	refreshTime := time.Unix(int64(iat), 0).Add(time.Duration(config.GlobalConfig.Auth.Refresh) * time.Minute).Unix()
+	if refreshTime > time.Now().Unix() {
 		response.Data = map[string]interface{}{
 			"header":   "Bearer ",
 			"token":    strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer "),
 			"userName": user,
 			"deadline": int64(exp),
-			"refresh":  _refresh_time,
+			"refresh":  refreshTime,
 		}
 	} else {
 		token, err := generateToken(user)
@@ -207,5 +206,5 @@ func refresh(ctx iris.Context) {
 			"refresh":  time.Now().Add(time.Duration(config.GlobalConfig.Auth.Refresh) * time.Minute).Unix(),
 		}
 	}
-	_ = ctx.JSON(response)
+	apiInterface.ResponseBody(ctx, response, nil)
 }

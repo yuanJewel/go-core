@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/SmartLyu/go-core/logger"
 	"github.com/kataras/iris/v12"
 	"io"
 	"io/ioutil"
@@ -69,4 +70,29 @@ func httpMethodUtil(method, url, username, password string, timeout time.Duratio
 	}(resp.Body)
 	_body, err := ioutil.ReadAll(resp.Body)
 	return resp.StatusCode, _body, err
+}
+
+func ResponseBody(ctx iris.Context, response *Response, data interface{}) {
+	if response.Code == 0 {
+		if data != nil {
+			response.Data = data
+		}
+	} else {
+		if data == nil {
+			response.Message = "No error message was returned"
+		} else {
+			message, ok := data.(string)
+			if ok {
+				response.Message = message
+			} else {
+				response.Message = "An unknown error occurred in the code, the error information cannot be obtained"
+			}
+		}
+	}
+
+	ctx.Recorder().ResetBody()
+	if err := ctx.JSON(response); err != nil {
+		logger.Log.WithField("traceId", response.TraceId).WithField("responsePath", ctx.Path()).
+			WithField("responseMethod", ctx.Method()).Warnf(err.Error())
+	}
 }

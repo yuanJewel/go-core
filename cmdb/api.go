@@ -20,8 +20,7 @@ func GetDbByIdsInfo(ctx iris.Context, search, object interface{}) {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
 	}
-	response.Data = object
-	_ = ctx.JSON(response)
+	api.ResponseBody(ctx, response, object)
 }
 
 // PostDbInfo 批量添加数据
@@ -75,8 +74,7 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 		results = append(results, *_result)
 	}
 	go InsertAssetRecordItem(ctx, bodyInfo, "", results...)
-	response.Data = bodyInfo
-	_ = ctx.JSON(response)
+	api.ResponseBody(ctx, response, bodyInfo)
 }
 
 // PutDbByIdInfo 修改指定
@@ -114,8 +112,7 @@ func PutDbByIdInfo(ctx iris.Context, object interface{}, special func(*map[strin
 		return
 	}
 	go InsertAssetRecordItem(ctx, bodyInfo, "", *result)
-	response.Data = object
-	_ = ctx.JSON(response)
+	api.ResponseBody(ctx, response, object)
 }
 
 // DeleteDbByIdInfo 根据id删除数据
@@ -126,12 +123,12 @@ func DeleteDbByIdInfo(ctx iris.Context, path string, object interface{}) {
 	ids := ctx.GetHeader("ids")
 	code, reverserBody := api.ReverserUtil(ctx, http.MethodGet, path)
 	if code != 200 {
-		err_response, err := api.UnmarshalResponse(reverserBody)
+		errResponse, err := api.UnmarshalResponse(reverserBody)
 		if err != nil {
 			api.ReturnErr(api.UnmarshalReponseError, ctx, err, response)
 			return
 		}
-		_ = ctx.JSON(err_response)
+		api.ResponseBody(ctx, response, errResponse)
 		return
 	}
 	type responseStruct struct {
@@ -160,6 +157,5 @@ func DeleteDbByIdInfo(ctx iris.Context, path string, object interface{}) {
 	}
 	body := map[string]string{"header": ids}
 	go InsertAssetRecordItem(ctx, body, "", results...)
-	response.Data = body
-	_ = ctx.JSON(response)
+	api.ResponseBody(ctx, response, body)
 }

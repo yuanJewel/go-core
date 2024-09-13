@@ -30,7 +30,7 @@ import (
 func (Object) AuthenticateApi(ctx iris.Context) {
 	response := ResponseInit(ctx)
 	url := fmt.Sprintf("%s/authenticate", strings.TrimLeft(AuthenticateUrl, "/"))
-	headers := http.Header{"traceid": []string{response.TraceId}}
+	headers := http.Header{"traceId": []string{response.TraceId}}
 	body, err := ctx.GetBody()
 	if err != nil {
 		ReturnErr(GetBodyError, ctx, err, response)
@@ -48,7 +48,7 @@ func (Object) AuthenticateApi(ctx iris.Context) {
 		return
 	}
 	ctx.StatusCode(code)
-	_ = ctx.JSON(returnObject)
+	ResponseBody(ctx, response, returnObject)
 }
 
 func (Object) Authenticate(ctx iris.Context) error {

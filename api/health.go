@@ -65,6 +65,6 @@ func healthCheckHandle(errFunc func() map[string]error) func(ctx iris.Context) {
 		if hc.Status != HealthcheckStatusUP {
 			ctx.StatusCode(http.StatusInternalServerError)
 		}
-		_ = ctx.JSON(hc)
+		ResponseBody(ctx, ResponseInit(ctx), hc)
 	}
 }

@@ -64,6 +64,10 @@ func CreateApi(service Service, isSwagger bool) (*iris.Application, func() error
 	// 配置访问日志的对象，如果需要打点逻辑
 	r, _close := logger.NewRequestLogger(service.Dot)
 	app.Use(r)
+	app.Use(func(ctx iris.Context) {
+		ctx.Record() // 开启 ResponseRecorder
+		ctx.Next()   // 继续处理请求
+	})
 
 	// 支持跨域访问
 	crs := cors.New(cors.Options{
