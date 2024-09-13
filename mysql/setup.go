@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-func (this *Mysql) Setup(models []interface{}) error {
+func (m *Mysql) Setup(models []interface{}) error {
 	var (
 		notExistTables = []interface{}{}
 	)
@@ -15,10 +15,10 @@ func (this *Mysql) Setup(models []interface{}) error {
 	}...)
 	defer logger.Log.Infof("成功更新数据库，当前库中存在 %d 个数据表", len(models))
 
-	err := this.DbConn.AutoMigrate(models...)
+	err := m.DbConn.AutoMigrate(models...)
 	if err != nil {
 		for _, modle := range models {
-			if !this.DbConn.Migrator().HasTable(modle) {
+			if !m.DbConn.Migrator().HasTable(modle) {
 				notExistTables = append(notExistTables, modle)
 			} else {
 				// https://gorm.io/docs/migration.html#Migrator-Interface
@@ -27,9 +27,9 @@ func (this *Mysql) Setup(models []interface{}) error {
 				_db := reflect.TypeOf(modle)
 				for i := 0; i < _db.NumField(); i++ {
 					_columnname := _db.Field(i).Name
-					if !this.DbConn.Migrator().HasColumn(modle, _columnname) {
+					if !m.DbConn.Migrator().HasColumn(modle, _columnname) {
 						logger.Log.Infof("修改表 %s 新增字段 %s", _db.Name(), _columnname)
-						if err := this.DbConn.Migrator().AddColumn(modle, _columnname); err != nil {
+						if err := m.DbConn.Migrator().AddColumn(modle, _columnname); err != nil {
 							return err
 						}
 					}
@@ -45,7 +45,7 @@ func (this *Mysql) Setup(models []interface{}) error {
 		for _, _notExistTable := range notExistTables {
 			logger.Log.Infof("新增表 %s", reflect.TypeOf(_notExistTable).Name())
 		}
-		err := this.DbConn.Migrator().CreateTable(notExistTables...)
+		err := m.DbConn.Migrator().CreateTable(notExistTables...)
 		if err == nil {
 			return nil
 		}

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var CmdbInstance CmdbService
+var Instance Service
 
 // InitCmdb Get the cmdb instance, the default is mysql
 func InitCmdb(cmdbCfgData *config.DataSourceDetail) error {
@@ -17,12 +17,12 @@ func InitCmdb(cmdbCfgData *config.DataSourceDetail) error {
 	case "oracle":
 		return nil
 	default:
-		CmdbInstance, err = mysql.GetMysqlInstance(cmdbCfgData)
+		Instance, err = mysql.GetMysqlInstance(cmdbCfgData)
 		if err != nil {
 			return err
 		}
 	}
-	if CmdbInstance == nil {
+	if Instance == nil {
 		return errors.New("config about config cannot find right instance")
 	}
 	return nil

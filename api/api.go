@@ -131,5 +131,7 @@ func (Object) Dot(i ...interface{}) {
 		uri    = ctx.Path()
 		method = ctx.Method()
 	)
-	log.Println(fmt.Sprintf("Dot Functions: Trace(%s), User(%s), Uri(%s), Method(%s)", traceId, username, uri, method))
+	log.Println(fmt.Sprintf("Dot Functions: Trace(%s), User(%s), Method(%s)， Uri(%s)", traceId, username, method, uri))
 }
+
+func NonSpecialTask(m *map[string]interface{}) {}

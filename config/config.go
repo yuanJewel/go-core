@@ -31,6 +31,6 @@ type DataSourceDetail struct {
 	Password        string `required:"true" yaml:"password" env:"db.password"`
 	Charset         string `default:"utf8" yaml:"charset" env:"db.charset"`
 	Port            int    `default:"3306" yaml:"port" env:"db.port"`
-	IdleConnections int    `default:"1" yaml:"idleconnections" env:"db.idleconnections"`
-	MaxConnections  int    `default:"1" yaml:"maxconnections" env:"db.maxconnections"`
+	IdleConnections int    `default:"1" yaml:"idle_connections" env:"db.idle_connections"`
+	MaxConnections  int    `default:"1" yaml:"max_connections" env:"db.max_connections"`
 }

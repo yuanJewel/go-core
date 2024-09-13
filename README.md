@@ -36,6 +36,34 @@ make run    # 运行任务
     └── index.html
 ```
 
+### 配置基础格式
+
+```yaml
+apiVersion: v1
+
+server:
+  port: 8080
+
+auth:
+  key:                  # jwt的密钥
+  timeout: 600
+  refresh: 300
+  cryptoKey:            # 数据加密密钥
+  cryptoPrefix:         # 数据加密前缀
+
+db:
+  # 目前只支持mysql
+  driver: mysql
+  host: 
+  port: 3306
+  db: 
+  user: 
+  password: 
+  charset: utf8
+  idle_connections: 2
+  max_connections: 10
+```
+
 ## 目录结构
 
 ### api

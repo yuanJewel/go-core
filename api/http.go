@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/kataras/iris/v12"
 	"io"
 	"io/ioutil"
@@ -32,13 +33,19 @@ func HttpUtil(method, url string, timeout time.Duration, headers http.Header, bo
 }
 
 func ReverserUtil(ctx iris.Context, method, path string) (int, []byte) {
-	command_path := Reverser.Path(path)
+	commandPath := Reverser.Path(path)
 	rec := ctx.Recorder()
-	ctx.Exec(method, command_path)
+	ctx.Exec(method, commandPath)
 	code := ctx.GetStatusCode()
 	body := rec.Body()
 	rec.ResetBody()
 	return code, body
+}
+
+func UnmarshalResponse(body []byte) (*Response, error) {
+	var returnObject Response
+	err := json.Unmarshal(body, &returnObject)
+	return &returnObject, err
 }
 
 func httpMethodUtil(method, url, username, password string, timeout time.Duration, headers map[string]string, body io.Reader) (int, []byte, error) {
@@ -57,7 +64,9 @@ func httpMethodUtil(method, url, username, password string, timeout time.Duratio
 	if err != nil {
 		return 0, nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 	_body, err := ioutil.ReadAll(resp.Body)
 	return resp.StatusCode, _body, err
 }

@@ -17,14 +17,24 @@ func (Object) GetAuth() string {
 
 func (Object) Party(app iris.Party) {
 	app.Get("/", index).Name = "index"
+	app.Get("/free/refresh", refresh).Name = "refresh"
+
+	app.Get("/project", getProjects).Name = "get-projects"
+	app.Put("/project", putProjects).Name = "put-projects"
+	app.Post("/project", postProject).Name = "post-project"
+	app.Delete("/project", deleteProjects).Name = "delete-projects"
 
 	app.OnErrorCode(iris.StatusNotFound, notFound)
+}
+
+func (Object) AuthenticateApi(ctx iris.Context) {
+	authenticate(ctx)
 }
 
 func (Object) Health() func() map[string]error {
 	return func() map[string]error {
 		errList := map[string]error{}
-		errList["cmdb"] = cmdb.CmdbInstance.HealthCheck()
+		errList["cmdb"] = cmdb.Instance.HealthCheck()
 		return errList
 	}
 }

@@ -5,13 +5,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// 生成8位由数字字母组成的字符串
-func GenerateProjectid() string {
+// GenerateUuid  生成8位由数字字母组成的字符串
+func GenerateUuid() string {
 	projectid := uuid.New().String()[:8]
 	return projectid
 }
 
-// slice去重
+// RemoveRepByMap slice去重
 func RemoveRepByMap(slc []string) []string {
 	result := []string{}         // 存放返回的不重复切片
 	tempMap := map[string]byte{} // 存放不重复主键
@@ -30,13 +30,13 @@ func CreateUUID() string {
 	return uuid.New().String()
 }
 
-// base64 加密
+// Base64Encode base64 加密
 func Base64Encode(src []byte) string {
 	dst := b64.StdEncoding.EncodeToString(src)
 	return dst
 }
 
-// base64 解密
+// Base64Decode base64 解密
 func Base64Decode(scr string) ([]byte, error) {
 	return b64.StdEncoding.DecodeString(scr)
 }

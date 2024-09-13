@@ -96,7 +96,7 @@ help:
 	@sed -n 's/^##//p' Makefile | column -t -s ':' |  sed -e 's/^/ /'
 
 ## before push code: vet、fmt、fmt-check
-before-push-code: list mod-tidy vet fmt fmt-check
+before-push-code: list mod-tidy vet fmt fmt-check swag-build bindata
 
 ## all: execut test、build、docker-build、docker-push targets
 all: vet fmt fmt-check test build

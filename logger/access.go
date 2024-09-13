@@ -15,7 +15,7 @@ import (
 )
 
 const deleteFileOnExit = false
-const logsdir = "logs"
+const logDir = "logs"
 
 var logFile *os.File
 
@@ -52,7 +52,7 @@ var excludeExtensions = [...]string{
 }
 
 func Columnize(nowFormatted, traceId, username string, latency time.Duration, status int, ip, method, path string, _byte int, message interface{}, headerMessage interface{}) string {
-	// 时间 traceId ip method path response responsetime byte useragent
+	// 时间 traceId ip method path response time byte useragent
 	line := fmt.Sprintf("%s %s %s %s %s %s %v %v %d %s", nowFormatted, traceId, username, ip, method, path, status, int64(latency/time.Millisecond), _byte, headerMessage)
 	outputC := []string{
 		line,
@@ -92,7 +92,7 @@ func NewRequestLogger(dot func(...interface{})) (h iris.Handler, close func() er
 			username = "-"
 		}
 		output := Columnize(fmt.Sprintf("[%s]", time.Now().Format("02/Jan/2006:15:04:05 -0700")), traceId, username, latency, ctx.ResponseWriter().StatusCode(), ctx.RemoteAddr(), ctx.Method(), ctx.Path(), ctx.ResponseWriter().Written(), "", ctx.Request().Header.Get("User-Agent"))
-		logFile.Write([]byte(output))
+		_, _ = logFile.Write([]byte(output))
 		if dot != nil {
 			go dot(traceId, username, ctx)
 		}
@@ -164,7 +164,7 @@ func rollAccess() {
 
 func getAccessLogs() ([]string, error) {
 	files := []string{}
-	files, err := utils.GetAllFile(logsdir, files)
+	files, err := utils.GetAllFile(logDir, files)
 	if err != nil {
 		return nil, err
 	}

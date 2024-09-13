@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 )
 
+// AesEncrypt 加密
 // key 的长度最少为16位
 // 最好是16/24/32 位
 func AesEncrypt(orig string, key string) string {
@@ -30,6 +31,7 @@ func AesEncrypt(orig string, key string) string {
 
 }
 
+// AesDecrypt 解密
 func AesDecrypt(cryted string, key string) string {
 	// 转成字节数组
 	crytedByte, _ := base64.StdEncoding.DecodeString(cryted)
@@ -50,14 +52,14 @@ func AesDecrypt(cryted string, key string) string {
 	return string(orig)
 }
 
-// 补码
+// PKCS7Padding 补码
 func PKCS7Padding(ciphertext []byte, blocksize int) []byte {
 	padding := blocksize - len(ciphertext)%blocksize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-// 去码
+// PKCS7UnPadding 去码
 func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])

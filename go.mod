@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
+	github.com/fatih/structs v1.1.0
 	github.com/google/uuid v1.6.0
 	github.com/iris-contrib/middleware/cors v0.0.0-20240502084239-34f27409ce72
 	github.com/iris-contrib/swagger/v12 v12.0.1
@@ -33,7 +34,6 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect

@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type CmdbService interface {
+type Service interface {
 	HealthCheck() error
 	Setup([]interface{}) error
 
@@ -26,7 +26,5 @@ type CmdbService interface {
 	// Customized operation
 	GetItemsByIds(interface{}, interface{}, string) (bool, error)
 	GetItemsByIdsOrder(interface{}, interface{}, string, string) (bool, error)
-	GetItemsByStackIds(interface{}, interface{}, string) (bool, error)
-	GetItemsByIdsAndClouds(interface{}, interface{}, string, string) (bool, error)
-	GetItemsByIdsAndProjects(interface{}, interface{}, string, string) (bool, error)
+	GetItemsByIdsAndSlices(interface{}, interface{}, string, string, string) (bool, error)
 }

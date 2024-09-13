@@ -5,7 +5,7 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
-// api 返回的统一数据结构
+// Response api 返回的统一数据结构
 // traceId 首先从Header中获取，如果有继续往下传递，否则新生成一个traceId
 // Code 用于标识返回状态, Code的定义应该全局统一，看Code就知道错误类型，0 为正常
 // Message 用于当api调用出错时返回信息

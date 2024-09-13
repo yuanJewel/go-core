@@ -14,15 +14,15 @@ type Mysql struct {
 	DbConn *gorm.DB
 }
 
-type mysql_logger struct{}
+type mysqlLogger struct{}
 
-func (mysql_logger) Printf(format string, args ...interface{}) {
+func (mysqlLogger) Printf(format string, args ...interface{}) {
 	logger.Log.Errorf(format, args...)
 }
 
 func GetMysqlInstance(cmdbCfgData *config.DataSourceDetail) (*Mysql, error) {
 	newLogger := gormlogger.New(
-		mysql_logger{},
+		mysqlLogger{},
 		gormlogger.Config{
 			SlowThreshold:             time.Second,      // Slow SQL threshold
 			LogLevel:                  gormlogger.Error, // Log level
@@ -31,8 +31,8 @@ func GetMysqlInstance(cmdbCfgData *config.DataSourceDetail) (*Mysql, error) {
 		},
 	)
 
-	db_conn_string := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local", cmdbCfgData.User, cmdbCfgData.Password, cmdbCfgData.Host, cmdbCfgData.Port, cmdbCfgData.Db, cmdbCfgData.Charset)
-	dbConn, err := gorm.Open(mysql.Open(db_conn_string), &gorm.Config{
+	dbConnString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local", cmdbCfgData.User, cmdbCfgData.Password, cmdbCfgData.Host, cmdbCfgData.Port, cmdbCfgData.Db, cmdbCfgData.Charset)
+	dbConn, err := gorm.Open(mysql.Open(dbConnString), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {

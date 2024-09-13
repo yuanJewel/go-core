@@ -46,23 +46,27 @@ const (
 	// Redis connect error
 	ConnectRedisError = 401
 	SelectRedisError  = 402
+
+	// reflect error
+	ReflectError          = 501
+	UnmarshalReponseError = 502
 )
 
-func ApiReturnErr(code int, ctx iris.Context, err error, response *Response) {
+func ReturnErr(code int, ctx iris.Context, err error, response *Response) {
 	var (
-		function_name = "unknown_function"
-		function_file = ""
-		function_line = 0
+		functionName = "unknown_function"
+		functionFile = ""
+		functionLine = 0
 	)
 	pc, _pc_file, _pc_line, ok := runtime.Caller(1)
 	if ok {
-		function_name = runtime.FuncForPC(pc).Name()
-		function_file = _pc_file
-		function_line = _pc_line
+		functionName = runtime.FuncForPC(pc).Name()
+		functionFile = _pc_file
+		functionLine = _pc_line
 	}
 	errMsg := fmt.Sprintf("%s", err.Error())
-	logger.Log.WithField("traceid", response.TraceId).WithField("function", function_name).
-		WithField("callerfile", function_file).WithField("callerline", function_line).Warnf(errMsg)
+	logger.Log.WithField("traceId", response.TraceId).WithField("function", functionName).
+		WithField("callerFile", functionFile).WithField("callerLine", functionLine).Warnf(errMsg)
 	response.Code = code
 	response.Message = errMsg
 	response.Data = nil

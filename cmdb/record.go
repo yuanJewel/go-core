@@ -17,77 +17,78 @@ import (
 
 func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, dbs ...gorm.DB) {
 	var (
-		function_name = "unknown_function"
-		function_file = ""
-		function_line = 0
-		user          db.User
-		username      = api.GetUserName(ctx)
-		chageTable    = []db.TableAffect{}
-		tranceid      = ctx.Request().Header.Get("traceid")
-		actionList    = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
+		functionName = "unknown_function"
+		functionFile = ""
+		functionLine = 0
+		user         db.User
+		username     = api.GetUserName(ctx)
+		changeTable  = make([]db.TableAffect, 0)
+		tranceId     = ctx.Request().Header.Get("traceId")
+		actionList   = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
 	)
 
-	pc, _pc_file, _pc_line, ok := runtime.Caller(1)
+	pc, pcFile, pcLine, ok := runtime.Caller(1)
 	if ok {
-		function_name = runtime.FuncForPC(pc).Name()
-		function_file = _pc_file
-		function_line = _pc_line
+		functionName = runtime.FuncForPC(pc).Name()
+		functionFile = pcFile
+		functionLine = pcLine
 	}
-	_user_exist, err := CmdbInstance.GetItem(db.User{Name: username}, &user)
+	userExist, err := Instance.GetItem(db.User{Name: username}, &user)
 	if err != nil {
-		logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-			WithField("callerline", function_line).Errorln(err)
+		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+			WithField("callerLine", functionLine).Errorln(err)
 		return
 	}
-	if !_user_exist {
-		logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-			WithField("callerline", function_line).Errorf("cannot find user %s", username)
+	if !userExist {
+		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+			WithField("callerLine", functionLine).Errorf("cannot find user %s", username)
 		return
 	}
 	_body, err := json.Marshal(&body)
 	if err != nil {
-		logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-			WithField("callerline", function_line).Errorf("cannot get body: %v", body)
+		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+			WithField("callerLine", functionLine).Errorf("cannot get body: %v", body)
 	}
 
-	if _, err := CmdbInstance.AddItem(&db.AssetRecord{
-		TranceId:     tranceid,
+	if _, err := Instance.AddItem(&db.AssetRecord{
+		TranceId:     tranceId,
 		UpdateTime:   time.Now(),
 		UpdateUserId: user.ID,
 		Url:          ctx.Path(),
+		Method:       ctx.Method(),
 		Body:         string(_body),
 		Context:      context,
 	}, 1); err != nil {
-		logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-			WithField("callerline", function_line).Errorln(err)
+		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+			WithField("callerLine", functionLine).Errorln(err)
 	}
 
 	for _, d := range dbs {
 		var (
-			table            = d.Statement.Table
-			action           = "unknow"
-			_unknown_clauses = []string{}
-			primaryIds       = readModel(d.Statement.Model)
+			table          = d.Statement.Table
+			action         = "unknown"
+			unknownClauses = make([]string, 0)
+			primaryIds     = readModel(d.Statement.Model)
 		)
 
-		if !CmdbInstance.HasTable(table) {
-			logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-				WithField("callerline", function_line).Errorf("cannot find table %s", table)
+		if !Instance.HasTable(table) {
+			logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+				WithField("callerLine", functionLine).Errorf("cannot find table %s", table)
 		}
 		for _action := range d.Statement.Clauses {
 			if utils.InSlice(_action, actionList) {
 				action = _action
 				break
 			}
-			_unknown_clauses = append(_unknown_clauses, _action)
+			unknownClauses = append(unknownClauses, _action)
 		}
-		if action == "unknow" {
-			logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-				WithField("callerline", function_line).Errorf("cannot get action: %v", _unknown_clauses)
+		if action == "unknown" {
+			logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+				WithField("callerLine", functionLine).Errorf("cannot get action: %v", unknownClauses)
 		}
 		for _, primaryId := range primaryIds {
-			chageTable = append(chageTable, db.TableAffect{
-				TranceId:     tranceid,
+			changeTable = append(changeTable, db.TableAffect{
+				TranceId:     tranceId,
 				UpdateTime:   time.Now(),
 				UpdateUserId: user.ID,
 				Table:        table,
@@ -96,10 +97,10 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 			})
 		}
 	}
-	if len(chageTable) > 0 {
-		if _, err := CmdbInstance.AddItem(&chageTable, int64(len(chageTable))); err != nil {
-			logger.Log.Logger.WithField("function", function_name).WithField("callerfile", function_file).
-				WithField("callerline", function_line).Errorln(err)
+	if len(changeTable) > 0 {
+		if _, err := Instance.AddItem(&changeTable, int64(len(changeTable))); err != nil {
+			logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+				WithField("callerLine", functionLine).Errorln(err)
 		}
 	}
 }

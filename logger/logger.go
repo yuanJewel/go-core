@@ -38,6 +38,7 @@ func init() {
 	go RollLogFile()
 }
 
+// RollLogFile 滚动更新日志文件
 // 按大小进行滚动，50M 一个文件，默认保留三个文件
 // 保留个数可以通过 环境变量 LoggerRetainNumber 覆盖
 // 单个日志文件大小 通过 LoggerFileSize 覆盖
@@ -65,17 +66,17 @@ func rollFile(_filename string, num, retainNumber int) {
 	}
 	if utils.FileExists(filename) {
 		if num >= retainNumber {
-			os.Remove(filename)
+			_ = os.Remove(filename)
 			return
 		}
 		rollFile(_filename, num+1, retainNumber)
 	}
 	if num > 0 {
-		os.Rename(filename, fmt.Sprintf("%s.%d", _filename, num+1))
+		_ = os.Rename(filename, fmt.Sprintf("%s.%d", _filename, num+1))
 	} else {
 		var mutex sync.Mutex
 		mutex.Lock()
-		os.Rename(filename, fmt.Sprintf("%s.%d", _filename, num+1))
+		_ = os.Rename(filename, fmt.Sprintf("%s.%d", _filename, num+1))
 		if file, err := os.OpenFile(_filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err == nil {
 			Log.Logger.Out = file
 		}
@@ -117,5 +118,5 @@ func getLogFileSize() int64 {
 // 配置log的根目录
 // 如果未配置根目录则为当前目录
 func getLogRootPath() string {
-	return path.Join(os.Getenv("LOGGER_ROOT_PATH"), logsdir)
+	return path.Join(os.Getenv("LOGGER_ROOT_PATH"), logDir)
 }

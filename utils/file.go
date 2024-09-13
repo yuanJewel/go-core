@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// 判断文件是否存在
+// FileExists 判断文件是否存在
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
@@ -18,7 +18,7 @@ func FileExists(path string) bool {
 	return true
 }
 
-// 遍历文件夹获取所有文件
+// GetAllFile 遍历文件夹获取所有文件
 func GetAllFile(pathname string, s []string) ([]string, error) {
 	rd, err := ioutil.ReadDir(pathname)
 	if err != nil {
@@ -41,7 +41,7 @@ func GetAllFile(pathname string, s []string) ([]string, error) {
 	return s, nil
 }
 
-// 写入文件
+// WriteToFile 写入文件
 func WriteToFile(filename, content string) error {
 	err := ioutil.WriteFile(filename, []byte(content), 0644)
 	return err
@@ -51,7 +51,7 @@ func BitToMb(b int64) int64 {
 	return b / 1024 / 1024
 }
 
-func WritelinesToFile(filename, content string, _append bool) error {
+func WriteLinesToFile(filename, content string, _append bool) error {
 	if !_append {
 		return WriteToFile(filename, content)
 	}
