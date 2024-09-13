@@ -20,8 +20,8 @@ func (Object) Party(app iris.Party) {
 	app.Get("/free/refresh", refresh).Name = "refresh"
 
 	app.Get("/project", getProjects).Name = "get-projects"
-	app.Put("/project", putProjects).Name = "put-projects"
-	app.Post("/project", postProject).Name = "post-project"
+	app.Put("/project", putProject).Name = "put-project"
+	app.Post("/project", postProjects).Name = "post-projects"
 	app.Delete("/project", deleteProjects).Name = "delete-projects"
 
 	app.OnErrorCode(iris.StatusNotFound, notFound)

@@ -36,7 +36,7 @@ func getProjects(ctx iris.Context) {
 // @Failure 501 {object} apiInterface.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/project [post]
-func postProject(ctx iris.Context) {
+func postProjects(ctx iris.Context) {
 	cmdb.PostDbInfo(ctx, &[]db.Project{}, func(m *map[string]interface{}) {
 		(*m)["id"] = uuid.New().String()
 	})
@@ -55,7 +55,7 @@ func postProject(ctx iris.Context) {
 // @Failure 501 {object} apiInterface.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/project [put]
-func putProjects(ctx iris.Context) {
+func putProject(ctx iris.Context) {
 	cmdb.PutDbByIdInfo(ctx, &db.Project{}, apiInterface.NonSpecialTask)
 }
 

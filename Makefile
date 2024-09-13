@@ -90,7 +90,6 @@ compile-asset:
 	@# Windows 64-Bit
 	@GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-$(VERSION)-windows-amd64 main.go
 
-
 help:
 	@echo "Usage: \n"
 	@sed -n 's/^##//p' Makefile | column -t -s ':' |  sed -e 's/^/ /'
