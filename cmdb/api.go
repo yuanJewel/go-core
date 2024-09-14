@@ -2,20 +2,57 @@ package cmdb
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/SmartLyu/go-core/api"
 	"github.com/SmartLyu/go-core/utils"
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
 	"net/http"
+	"strings"
 )
 
-// GetDbByIdsInfo 根据ids获取数据
+type responseStruct struct {
+	api.Response
+	Data []map[string]interface{} `json:"data,omitempty"`
+}
+
+func initIdsString(ids string) string {
+	returnIds := ids
+	if !strings.HasPrefix(ids, "[") {
+		if ids == "" || ids == "*" {
+			returnIds = "*"
+		} else {
+			returnIds = fmt.Sprintf("[\"%s\"]", ids)
+		}
+	}
+	return returnIds
+}
+
+// GetDbInfoByIds 根据ids获取数据
 // search 搜索条件 必须是在db中定义的struct对象
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
-func GetDbByIdsInfo(ctx iris.Context, search, object interface{}) {
+func GetDbInfoByIds(ctx iris.Context, search, object interface{}) {
 	response := api.ResponseInit(ctx)
-	ids := ctx.GetHeader("ids")
+	ids := initIdsString(ctx.GetHeader("ids"))
 	_, err := Instance.GetItemsByIds(search, object, ids)
+	if err != nil {
+		api.ReturnErr(api.SelectDbError, ctx, err, response)
+		return
+	}
+	api.ResponseBody(ctx, response, object)
+}
+
+// GetDbInfoByIdsAndKey 根据ids获取数据
+// search 搜索条件 必须是在db中定义的struct对象
+// object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
+// key 作为需要新增检索的header字段
+func GetDbInfoByIdsAndKey(ctx iris.Context, search, object interface{}, key string) {
+	response := api.ResponseInit(ctx)
+	ids := initIdsString(ctx.GetHeader("ids"))
+	keys := initIdsString(ctx.GetHeader(key))
+
+	_, err := Instance.GetItemsByIdsAndSlices(search, object, ids, key, keys)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
@@ -28,7 +65,7 @@ func GetDbByIdsInfo(ctx iris.Context, search, object interface{}) {
 // db中需要定义两层结构，detail json字段引用数据层，外加一个ID字段，作为uuid
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 // special 函数，可以修改bodyObject，如添加自定义字段
-func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]interface{})) {
+func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]interface{}) error) {
 	response := api.ResponseInit(ctx)
 	body, err := ctx.GetBody()
 	if err != nil {
@@ -54,8 +91,11 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 			return
 		}
 		if !_exist {
-			special(&_bodyObject)
 			_bodyObject["detail"] = _info
+			if err = special(&_bodyObject); err != nil {
+				api.ReturnErr(api.SpecialReturnError, ctx, err, response)
+				return
+			}
 			needAddSlice = append(needAddSlice, _bodyObject)
 		}
 	}
@@ -74,25 +114,49 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 		results = append(results, *_result)
 	}
 	go InsertAssetRecordItem(ctx, bodyInfo, "", results...)
-	api.ResponseBody(ctx, response, bodyInfo)
+	api.ResponseBody(ctx, response, needAddSlice)
 }
 
-// PutDbByIdInfo 修改指定
+// PutDbInfoById 修改指定
 // 要求body传入的结构和db中定义的struct对象一致
 // db中需要定义两层结构，detail json字段引用数据层，外加一个ID字段，作为uuid
 // special 函数，可以修改bodyObject，如添加自定义字段
-func PutDbByIdInfo(ctx iris.Context, object interface{}, special func(*map[string]interface{})) {
+func PutDbInfoById(ctx iris.Context, path string, object interface{}, special func(*map[string]interface{}) error) {
 	response := api.ResponseInit(ctx)
 	id := ctx.GetHeader("id")
+	ctx.Request().Header.Set("ids", fmt.Sprintf("[\"%s\"]", id))
+	code, reverserBody := api.ReverserUtil(ctx, http.MethodGet, path)
+	if code != 200 {
+		errResponse, err := api.UnmarshalResponse(reverserBody)
+		if err != nil {
+			api.ReturnErr(api.UnmarshalReponseError, ctx, err, response)
+			return
+		}
+		api.ResponseBody(ctx, response, errResponse)
+		return
+	}
+
 	body, err := ctx.GetBody()
 	if err != nil {
 		api.ReturnErr(api.GetBodyError, ctx, err, response)
 		return
 	}
 	var (
-		bodyInfo   = make(map[string]interface{})
-		updateInfo = make(map[string]interface{})
+		returnObject responseStruct
+		bodyInfo     = make(map[string]interface{})
+		updateInfo   = make(map[string]interface{})
 	)
+	if err = json.Unmarshal(reverserBody, &returnObject); err != nil {
+		api.ReturnErr(api.GetBodyError, ctx, err, response)
+		return
+	}
+	if len(returnObject.Data) == 0 {
+		api.ReturnErr(api.GetBodyError, ctx,
+			errors.New("the data that needs to be modified cannot be obtained according to the key in the header"),
+			response)
+		return
+	}
+
 	err = json.Unmarshal(body, &bodyInfo)
 	if err != nil {
 		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
@@ -100,7 +164,10 @@ func PutDbByIdInfo(ctx iris.Context, object interface{}, special func(*map[strin
 	}
 	updateInfo["detail"] = bodyInfo
 	updateInfo["id"] = id
-	special(&updateInfo)
+	if err = special(&updateInfo); err != nil {
+		api.ReturnErr(api.SpecialReturnError, ctx, err, response)
+		return
+	}
 
 	if err = utils.MapToStruct(updateInfo, object); err != nil {
 		api.ReturnErr(api.ReflectError, ctx, err, response)
@@ -115,12 +182,11 @@ func PutDbByIdInfo(ctx iris.Context, object interface{}, special func(*map[strin
 	api.ResponseBody(ctx, response, object)
 }
 
-// DeleteDbByIdInfo 根据id删除数据
+// DeleteDb 根据id删除数据
 // path 为根据Id查看数据的接口名
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
-func DeleteDbByIdInfo(ctx iris.Context, path string, object interface{}) {
+func DeleteDb(ctx iris.Context, path string, object interface{}) {
 	response := api.ResponseInit(ctx)
-	ids := ctx.GetHeader("ids")
 	code, reverserBody := api.ReverserUtil(ctx, http.MethodGet, path)
 	if code != 200 {
 		errResponse, err := api.UnmarshalResponse(reverserBody)
@@ -130,10 +196,6 @@ func DeleteDbByIdInfo(ctx iris.Context, path string, object interface{}) {
 		}
 		api.ResponseBody(ctx, response, errResponse)
 		return
-	}
-	type responseStruct struct {
-		api.Response
-		Data []map[string]interface{} `json:"data,omitempty"`
 	}
 	var (
 		returnObject responseStruct
@@ -155,7 +217,7 @@ func DeleteDbByIdInfo(ctx iris.Context, path string, object interface{}) {
 		}
 		results = append(results, *_result)
 	}
-	body := map[string]string{"header": ids}
-	go InsertAssetRecordItem(ctx, body, "", results...)
-	api.ResponseBody(ctx, response, body)
+
+	go InsertAssetRecordItem(ctx, returnObject, "", results...)
+	api.ResponseBody(ctx, response, returnObject)
 }

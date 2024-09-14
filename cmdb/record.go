@@ -9,6 +9,7 @@ import (
 	"github.com/SmartLyu/go-core/utils"
 	"github.com/fatih/structs"
 	"github.com/kataras/iris/v12"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"reflect"
 	"runtime"
@@ -22,9 +23,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionLine = 0
 		user         db.User
 		username     = api.GetUserName(ctx)
-		changeTable  = make([]db.TableAffect, 0)
 		tranceId     = ctx.Request().Header.Get("traceId")
-		actionList   = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
 	)
 
 	pc, pcFile, pcLine, ok := runtime.Caller(1)
@@ -63,6 +62,18 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 			WithField("callerLine", functionLine).Errorln(err)
 	}
 
+	entry := logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+		WithField("callerLine", functionLine)
+	AffectedTable(entry, ctx, user.ID, dbs...)
+}
+
+func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gorm.DB) {
+	var (
+		changeTable = make([]db.TableAffect, 0)
+		actionList  = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
+		tranceId    = ctx.Request().Header.Get("traceId")
+	)
+
 	for _, d := range dbs {
 		var (
 			table          = d.Statement.Table
@@ -72,8 +83,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		)
 
 		if !Instance.HasTable(table) {
-			logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
-				WithField("callerLine", functionLine).Errorf("cannot find table %s", table)
+			entry.Errorf("cannot find table %s", table)
 		}
 		for _action := range d.Statement.Clauses {
 			if utils.InSlice(_action, actionList) {
@@ -83,14 +93,13 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 			unknownClauses = append(unknownClauses, _action)
 		}
 		if action == "unknown" {
-			logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
-				WithField("callerLine", functionLine).Errorf("cannot get action: %v", unknownClauses)
+			entry.Errorf("cannot get action: %v", unknownClauses)
 		}
 		for _, primaryId := range primaryIds {
 			changeTable = append(changeTable, db.TableAffect{
 				TranceId:     tranceId,
 				UpdateTime:   time.Now(),
-				UpdateUserId: user.ID,
+				UpdateUserId: userId,
 				Table:        table,
 				PrimaryId:    primaryId,
 				Action:       action,
@@ -99,8 +108,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 	}
 	if len(changeTable) > 0 {
 		if _, err := Instance.AddItem(&changeTable, int64(len(changeTable))); err != nil {
-			logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
-				WithField("callerLine", functionLine).Errorln(err)
+			entry.Errorln(err)
 		}
 	}
 }

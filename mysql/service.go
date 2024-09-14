@@ -31,6 +31,9 @@ func (m *Mysql) AddItem(item interface{}, affectRows int64) (*gorm.DB, error) {
 	}
 	transaction := m.DbConn.Begin()
 	result := transaction.Create(item)
+	if result.Error != nil {
+		return result, result.Error
+	}
 	if err := affectedRowsIsError(result.RowsAffected, affectRows); result.Error == nil && err != nil {
 		transaction.Rollback()
 		return result, err
@@ -45,6 +48,9 @@ func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows int64) (
 	}
 	transaction := m.DbConn.Begin()
 	result := transaction.Where(old).Updates(new)
+	if result.Error != nil {
+		return result, result.Error
+	}
 	if err := affectedRowsIsError(result.RowsAffected, affectRows); result.Error == nil && err != nil {
 		transaction.Rollback()
 		return result, err
@@ -59,6 +65,9 @@ func (m *Mysql) DeleteItem(item interface{}, affectRows int64) (*gorm.DB, error)
 	}
 	transaction := m.DbConn.Begin()
 	result := transaction.Delete(item)
+	if result.Error != nil {
+		return result, result.Error
+	}
 	if err := affectedRowsIsError(result.RowsAffected, affectRows); result.Error == nil && err != nil {
 		transaction.Rollback()
 		return result, err

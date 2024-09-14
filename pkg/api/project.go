@@ -21,7 +21,7 @@ import (
 // @Security ApiKeyAuth
 // @Router /api/v1/project [get]
 func getProjects(ctx iris.Context) {
-	cmdb.GetDbByIdsInfo(ctx, db.Project{}, &[]db.Project{})
+	cmdb.GetDbInfoByIds(ctx, db.Project{}, &[]db.Project{})
 }
 
 // @Summary 新增项目信息
@@ -37,8 +37,12 @@ func getProjects(ctx iris.Context) {
 // @Security ApiKeyAuth
 // @Router /api/v1/project [post]
 func postProjects(ctx iris.Context) {
-	cmdb.PostDbInfo(ctx, &[]db.Project{}, func(m *map[string]interface{}) {
+	cmdb.PostDbInfo(ctx, &[]db.Project{}, func(m *map[string]interface{}) error {
+		if err := apiInterface.NormalSpecialTask(m); err != nil {
+			return err
+		}
 		(*m)["id"] = uuid.New().String()
+		return nil
 	})
 }
 
@@ -56,7 +60,7 @@ func postProjects(ctx iris.Context) {
 // @Security ApiKeyAuth
 // @Router /api/v1/project [put]
 func putProject(ctx iris.Context) {
-	cmdb.PutDbByIdInfo(ctx, &db.Project{}, apiInterface.NonSpecialTask)
+	cmdb.PutDbInfoById(ctx, "get-projects", &db.Project{}, apiInterface.NormalSpecialTask)
 }
 
 // @Summary 删除项目信息
@@ -72,5 +76,5 @@ func putProject(ctx iris.Context) {
 // @Security ApiKeyAuth
 // @Router /api/v1/project [delete]
 func deleteProjects(ctx iris.Context) {
-	cmdb.DeleteDbByIdInfo(ctx, "get-projects", &db.Project{})
+	cmdb.DeleteDb(ctx, "get-projects", &db.Project{})
 }

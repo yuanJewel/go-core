@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"reflect"
+	"time"
 )
 
 func InSlice(key interface{}, slice interface{}) bool {
@@ -66,7 +67,7 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 		// 如果 json 标签匹配 map 中的键
 		if value, ok := m[jsonTag]; ok {
 			// 检查是否是子 map，需要递归
-			if fieldValue.Kind() == reflect.Struct {
+			if fieldValue.Kind() == reflect.Struct && reflect.TypeOf(value) != reflect.TypeOf(time.Time{}) {
 				nestedStruct := reflect.New(fieldValue.Type()).Interface()
 				nestedMap, ok := value.(map[string]interface{})
 				if ok {

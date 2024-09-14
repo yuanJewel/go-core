@@ -50,6 +50,7 @@ const (
 	// reflect error
 	ReflectError          = 501
 	UnmarshalReponseError = 502
+	SpecialReturnError    = 503
 )
 
 func ReturnErr(code int, ctx iris.Context, err error, response *Response) {

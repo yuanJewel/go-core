@@ -138,4 +138,6 @@ func (Object) Dot(i ...interface{}) {
 	log.Println(fmt.Sprintf("Dot Functions: Trace(%s), User(%s), Method(%s)， Uri(%s)", traceId, username, method, uri))
 }
 
-func NonSpecialTask(m *map[string]interface{}) {}
+func NormalSpecialTask(m *map[string]interface{}) error {
+	return nil
+}
