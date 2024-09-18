@@ -70,14 +70,20 @@ func NewRequestLogger(dot func(...interface{})) (h iris.Handler, close func() er
 		Path:              true,
 		MessageHeaderKeys: []string{"User-Agent", "traceId"},
 	}
-	logFile = newLogFile()
-	close = func() error {
-		err := logFile.Close()
-		if deleteFileOnExit {
-			err = os.Remove(logFile.Name())
+
+	if isLogOutFile() {
+		logFile = newLogFile()
+		close = func() error {
+			err := logFile.Close()
+			if deleteFileOnExit {
+				err = os.Remove(logFile.Name())
+			}
+			return err
 		}
-		return err
+	} else {
+		logFile = os.Stdout
 	}
+
 	c.LogFuncCtx = func(ctx iris.Context, latency time.Duration) {
 		traceId := ctx.Request().Header.Get("traceId")
 		if traceId == "" {

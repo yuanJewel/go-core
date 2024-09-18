@@ -16,12 +16,7 @@ var (
 )
 
 func init() {
-	_logDir := getLogRootPath()
-	if err := Exists(_logDir); err != nil {
-		_ = os.MkdirAll(_logDir, os.FileMode(0777))
-	}
-	_filename := GetLogFilename()
-	file, err := os.OpenFile(_filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+
 	Log.Logger.SetReportCaller(true)
 	Log.Logger.SetLevel(logrus.InfoLevel)
 	Log.Logger.SetFormatter(&logrus.JSONFormatter{
@@ -29,6 +24,16 @@ func init() {
 		//FullTimestamp:   true,
 		TimestampFormat: "2006-01-02 15:04:05,000",
 	})
+	if !isLogOutFile() {
+		Log.Logger.Out = os.Stdout
+		return
+	}
+	_logDir := getLogRootPath()
+	if err := Exists(_logDir); err != nil {
+		_ = os.MkdirAll(_logDir, os.FileMode(0777))
+	}
+	_filename := GetLogFilename()
+	file, err := os.OpenFile(_filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err == nil {
 		Log.Logger.Out = file
 	} else {
@@ -119,4 +124,12 @@ func getLogFileSize() int64 {
 // 如果未配置根目录则为当前目录
 func getLogRootPath() string {
 	return path.Join(os.Getenv("LOGGER_ROOT_PATH"), logDir)
+}
+
+func isLogOutFile() bool {
+	style := os.Getenv("LOGGER_OUT_STYLE")
+	if style != "stdout" {
+		return true
+	}
+	return false
 }

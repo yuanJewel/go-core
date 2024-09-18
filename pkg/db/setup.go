@@ -1,11 +1,8 @@
 package db
 
 import (
-	"fmt"
 	"github.com/SmartLyu/go-core/cmdb"
 	"github.com/SmartLyu/go-core/config"
-	"github.com/SmartLyu/go-core/logger"
-	"github.com/SmartLyu/go-core/utils"
 )
 
 func SetupCmdb(cfg *config.DataSourceDetail) error {
@@ -17,10 +14,5 @@ func SetupCmdb(cfg *config.DataSourceDetail) error {
 	}); err != nil {
 		return err
 	}
-	_log, err := utils.ReadFromFile(logger.GetLogFilename())
-	if err != nil {
-		return err
-	}
-	fmt.Println(_log)
 	return nil
 }

@@ -25,7 +25,7 @@ func init() {
 }
 
 // @title Swagger SmartLyu go-core API
-// @version 1.1.2
+// @version 1.1.3
 // @description SmartLyu go-core API
 // @contact.name SmartLyu go-core Support
 

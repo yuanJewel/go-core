@@ -62,12 +62,16 @@ test: bindata
 	@go test ./... -v
 
 ## build: build the application to registry
-build: bindata clean
+build: clean test
 	@go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)
 
 ## run: runs go run main.go
 run:
 	@go run -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' " main.go
+
+## init-db: runs go run main.go -i
+init-db:
+	@LOGGER_OUT_STYLE=stdout go run -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' " main.go -i
 
 ## compile: build the application of different operating systems
 compile:
@@ -97,7 +101,7 @@ help:
 ## before push code: vet、fmt、fmt-check
 before-push-code: list mod-tidy vet fmt fmt-check swag-build bindata
 
-## all: execut test、build、docker-build、docker-push targets
+## all: execute test、build
 all: vet fmt fmt-check test build
 
 ## init:
