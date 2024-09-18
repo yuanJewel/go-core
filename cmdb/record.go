@@ -11,12 +11,17 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"os"
 	"reflect"
 	"runtime"
 	"time"
 )
 
 func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, dbs ...gorm.DB) {
+	if !isRecordData() {
+		return
+	}
+
 	var (
 		functionName = "unknown_function"
 		functionFile = ""
@@ -68,6 +73,10 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 }
 
 func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gorm.DB) {
+	if !isRecordData() {
+		return
+	}
+
 	var (
 		changeTable = make([]db.TableAffect, 0)
 		actionList  = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
@@ -142,4 +151,12 @@ func getId(value interface{}) string {
 		}
 	}
 	return ""
+}
+
+func isRecordData() bool {
+	style := os.Getenv("RECORD_DATA")
+	if style != "false" {
+		return true
+	}
+	return false
 }

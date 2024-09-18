@@ -8,4 +8,5 @@ MAINTAINER SmartLyu "luyu151111@gamil.com"
 ENV LC_ALL en_US.UTF-8
 ADD build/go-core /bin/go-core
 RUN chmod +x /bin/go-core
+WORKDIR /opt
 ENTRYPOINT ["go-core"]

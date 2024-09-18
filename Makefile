@@ -88,7 +88,7 @@ compile:
 	@# MacOS
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-darwin-amd64 main.go
 
-compile-asset:
+compile-asset: clean
 	@# Linux 64-Bit
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/prometheus/common/version.Version=$(VERSION)' -X 'github.com/prometheus/common/version.BuildUser=$(BUILDUSER)' -X 'github.com/prometheus/common/version.BuildDate=$(BUILDDATE)' -X 'github.com/prometheus/common/version.Branch=$(GITBRANCH)' -X 'github.com/prometheus/common/version.Revision=$(GITREVISION)'" -o build/$(APP)-$(VERSION)-linux-amd64 main.go
 	@# Windows 64-Bit
