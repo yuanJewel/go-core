@@ -33,7 +33,7 @@ func HttpUtil(method, url string, timeout time.Duration, headers http.Header, bo
 	return resp.StatusCode, _body, err
 }
 
-func ReverserInfoUtil(ctx iris.Context, headers http.Header, body io.Reader, method, path string) (int, []byte) {
+func ReverserInfoUtil(ctx iris.Context, response *Response, headers http.Header, body io.Reader, method, path string) (int, []byte) {
 	ctxNew := ctx.Clone()
 
 	if body != nil {
@@ -53,16 +53,30 @@ func ReverserInfoUtil(ctx iris.Context, headers http.Header, body io.Reader, met
 	headers.Set("traceId", ctxNew.GetHeader("traceId"))
 	ctxNew.Request().Header = headers
 
-	return ReverserUtil(ctxNew, method, path)
+	return ReverserUtil(ctxNew, response, method, path)
 }
 
-func ReverserUtil(ctx iris.Context, method, path string) (int, []byte) {
+func ReverserUtil(ctx iris.Context, response *Response, method, path string) (int, []byte) {
+	if response == nil {
+		response = ResponseInit(ctx)
+	}
+
 	commandPath := Reverser.Path(path)
 	rec := ctx.Recorder()
 	ctx.Exec(method, commandPath)
 	code := ctx.GetStatusCode()
 	body := rec.Body()
 	rec.ResetBody()
+
+	if code != 200 {
+		errResponse, err := UnmarshalResponse(body)
+		if err != nil {
+			ReturnErr(UnmarshalResponseError, ctx, err, response)
+			return code, body
+		}
+		ResponseBody(ctx, response, errResponse)
+		return code, body
+	}
 	return code, body
 }
 

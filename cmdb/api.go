@@ -125,14 +125,8 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	response := api.ResponseInit(ctx)
 	id := ctx.GetHeader("id")
 	ctx.Request().Header.Set("ids", fmt.Sprintf("[\"%s\"]", id))
-	code, reverserBody := api.ReverserUtil(ctx, http.MethodGet, path)
+	code, reverserBody := api.ReverserUtil(ctx, response, http.MethodGet, path)
 	if code != 200 {
-		errResponse, err := api.UnmarshalResponse(reverserBody)
-		if err != nil {
-			api.ReturnErr(api.UnmarshalResponseError, ctx, err, response)
-			return
-		}
-		api.ResponseBody(ctx, response, errResponse)
 		return
 	}
 
@@ -187,14 +181,8 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 func DeleteDb(ctx iris.Context, path string, object interface{}) {
 	response := api.ResponseInit(ctx)
-	code, reverserBody := api.ReverserUtil(ctx, http.MethodGet, path)
+	code, reverserBody := api.ReverserUtil(ctx, response, http.MethodGet, path)
 	if code != 200 {
-		errResponse, err := api.UnmarshalResponse(reverserBody)
-		if err != nil {
-			api.ReturnErr(api.UnmarshalResponseError, ctx, err, response)
-			return
-		}
-		api.ResponseBody(ctx, response, errResponse)
 		return
 	}
 	var (
