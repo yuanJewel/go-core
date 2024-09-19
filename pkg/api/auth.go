@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	apiInterface "github.com/SmartLyu/go-core/api"
+	"github.com/SmartLyu/go-core/api"
 	"github.com/SmartLyu/go-core/cmdb"
 	"github.com/SmartLyu/go-core/db"
 	"github.com/SmartLyu/go-core/logger"
@@ -28,17 +28,17 @@ import (
 // @tags login
 // @Accept json
 // @Produce json
-// @Success 200 {object} apiInterface.Response "ok"
+// @Success 200 {object} api.Response "ok"
 // @Failure 401 string string "未授权"
-// @Failure 403 {object} apiInterface.Response "权限不足"
-// @Failure 501 {object} apiInterface.Response "处理存在异常"
+// @Failure 403 {object} api.Response "权限不足"
+// @Failure 501 {object} api.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /authenticate [post]
 func authenticate(ctx iris.Context) {
-	response := apiInterface.ResponseInit(ctx)
+	response := api.ResponseInit(ctx)
 	body, err := ctx.GetBody()
 	if err != nil {
-		apiInterface.ReturnErr(apiInterface.GetBodyError, ctx, err, response)
+		api.ReturnErr(api.GetBodyError, ctx, err, response)
 		return
 	}
 
@@ -48,31 +48,31 @@ func authenticate(ctx iris.Context) {
 	)
 	err = json.Unmarshal(body, &auth_object)
 	if err != nil {
-		apiInterface.ReturnErr(apiInterface.JsonUnmarshalError, ctx, err, response)
+		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
 		return
 	}
 
 	_user_exist, err := cmdb.Instance.GetItem(db.User{Name: auth_object.Username}, &_user)
 	if err != nil {
-		apiInterface.ReturnErr(apiInterface.SelectDbError, ctx, err, response)
+		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
 	}
 	encryptPassword := config.GlobalConfig.Auth.CryptoPrefix + utils.AesEncrypt(auth_object.Password,
 		config.GlobalConfig.Auth.CryptoKey)
 	if _user.Passwd != encryptPassword {
-		apiInterface.ReturnErr(apiInterface.AuthenticationError, ctx,
+		api.ReturnErr(api.AuthenticationError, ctx,
 			errors.New("account password entered incorrectly"), response)
 		return
 	}
 	if !verifyCode(_user.GoogleSecret, auth_object.GoogleCode) {
-		apiInterface.ReturnErr(apiInterface.GoogleCodeError, ctx,
+		api.ReturnErr(api.GoogleCodeError, ctx,
 			errors.New("incorrect google code"), response)
 		return
 	}
 
 	token, err := generateToken(auth_object.Username)
 	if err != nil {
-		apiInterface.ReturnErr(apiInterface.GetTokenError, ctx, err, response)
+		api.ReturnErr(api.GetTokenError, ctx, err, response)
 	}
 	returnData := map[string]interface{}{
 		"header":   "Bearer ",
@@ -83,19 +83,19 @@ func authenticate(ctx iris.Context) {
 	}
 	if _user_exist {
 		if _, err := cmdb.Instance.UpdateItem(_user, &db.User{LastLoginTime: time.Now()}, 1); err != nil {
-			apiInterface.ReturnErr(apiInterface.UpdateDbError, ctx, err, response)
+			api.ReturnErr(api.UpdateDbError, ctx, err, response)
 			return
 		}
 	} else {
 		returnData["secret"] = _user.GoogleSecret
 	}
-	apiInterface.ResponseBody(ctx, response, returnData)
+	api.ResponseBody(ctx, response, returnData)
 	logger.Log.Infof("user %s login successfully", auth_object.Username)
 }
 
 func generateToken(username string) (string, error) {
 	token, err := jwt.NewSigner(jwt.HS256, config.GlobalConfig.Auth.Key,
-		time.Duration(config.GlobalConfig.Auth.Timeout)*time.Minute).Sign(apiInterface.UserClaims{Username: username})
+		time.Duration(config.GlobalConfig.Auth.Timeout)*time.Minute).Sign(api.UserClaims{Username: username})
 	return string(token), err
 }
 
@@ -171,17 +171,17 @@ func getGoogleToken(secret string, interval int64) string {
 // @tags login
 // @Accept json
 // @Produce json
-// @Success 200 {object} apiInterface.Response "ok"
+// @Success 200 {object} api.Response "ok"
 // @Failure 401 string string "未授权"
-// @Failure 403 {object} apiInterface.Response "权限不足"
-// @Failure 501 {object} apiInterface.Response "处理存在异常"
+// @Failure 403 {object} api.Response "权限不足"
+// @Failure 501 {object} api.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/free/refresh [Get]
 func refresh(ctx iris.Context) {
-	response := apiInterface.ResponseInit(ctx)
-	user, iat, exp, err := apiInterface.ParseToken(ctx)
+	response := api.ResponseInit(ctx)
+	user, iat, exp, err := api.ParseToken(ctx)
 	if err != nil {
-		apiInterface.ReturnErr(apiInterface.ParseTokenEorror, ctx, err, response)
+		api.ReturnErr(api.ParseTokenEorror, ctx, err, response)
 		return
 	}
 	refreshTime := time.Unix(int64(iat), 0).Add(time.Duration(config.GlobalConfig.Auth.Refresh) * time.Minute).Unix()
@@ -196,7 +196,7 @@ func refresh(ctx iris.Context) {
 	} else {
 		token, err := generateToken(user)
 		if err != nil {
-			apiInterface.ReturnErr(apiInterface.GetTokenError, ctx, err, response)
+			api.ReturnErr(api.GetTokenError, ctx, err, response)
 		}
 		response.Data = map[string]interface{}{
 			"header":   "Bearer ",
@@ -206,5 +206,5 @@ func refresh(ctx iris.Context) {
 			"refresh":  time.Now().Add(time.Duration(config.GlobalConfig.Auth.Refresh) * time.Minute).Unix(),
 		}
 	}
-	apiInterface.ResponseBody(ctx, response, nil)
+	api.ResponseBody(ctx, response, nil)
 }

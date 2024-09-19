@@ -68,7 +68,7 @@ func ReverserUtil(ctx iris.Context, response *Response, method, path string) (in
 	body := rec.Body()
 	rec.ResetBody()
 
-	if code != 200 {
+	if code != http.StatusOK {
 		errResponse, err := UnmarshalResponse(body)
 		if err != nil {
 			ReturnErr(UnmarshalResponseError, ctx, err, response)

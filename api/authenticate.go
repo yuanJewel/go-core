@@ -57,7 +57,7 @@ func (Object) Authenticate(ctx iris.Context) error {
 	headers.Set("Path", ctx.Path())
 	headers.Set("Method", ctx.Method())
 	code, returnBody, err := HttpUtil(http.MethodGet, url, HttpReadTimeout*time.Second, headers, nil)
-	if code != 200 || err != nil {
+	if code != http.StatusOK || err != nil {
 		return errors.New(fmt.Sprintf("return code is %d, Error is %v", code, err))
 	}
 	var (

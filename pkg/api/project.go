@@ -1,7 +1,7 @@
 package api
 
 import (
-	apiInterface "github.com/SmartLyu/go-core/api"
+	"github.com/SmartLyu/go-core/api"
 	"github.com/SmartLyu/go-core/cmdb"
 	"github.com/SmartLyu/go-core/pkg/db"
 	"github.com/google/uuid"
@@ -14,10 +14,10 @@ import (
 // @tags project
 // @Accept json
 // @Produce json
-// @Success 200 {object} apiInterface.Response "ok"
+// @Success 200 {object} api.Response "ok"
 // @Failure 401 string string "未授权"
-// @Failure 403 {object} apiInterface.Response "权限不足"
-// @Failure 501 {object} apiInterface.Response "处理存在异常"
+// @Failure 403 {object} api.Response "权限不足"
+// @Failure 501 {object} api.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/project [get]
 func getProjects(ctx iris.Context) {
@@ -30,15 +30,15 @@ func getProjects(ctx iris.Context) {
 // @tags project
 // @Accept json
 // @Produce json
-// @Success 200 {object} apiInterface.Response "ok"
+// @Success 200 {object} api.Response "ok"
 // @Failure 401 string string "未授权"
-// @Failure 403 {object} apiInterface.Response "权限不足"
-// @Failure 501 {object} apiInterface.Response "处理存在异常"
+// @Failure 403 {object} api.Response "权限不足"
+// @Failure 501 {object} api.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/project [post]
 func postProjects(ctx iris.Context) {
 	cmdb.PostDbInfo(ctx, &[]db.Project{}, func(m *map[string]interface{}) error {
-		if err := apiInterface.NormalSpecialTask(m); err != nil {
+		if err := api.NormalSpecialTask(m); err != nil {
 			return err
 		}
 		(*m)["id"] = uuid.New().String()
@@ -53,14 +53,14 @@ func postProjects(ctx iris.Context) {
 // @tags project
 // @Accept json
 // @Produce json
-// @Success 200 {object} apiInterface.Response "ok"
+// @Success 200 {object} api.Response "ok"
 // @Failure 401 string string "未授权"
-// @Failure 403 {object} apiInterface.Response "权限不足"
-// @Failure 501 {object} apiInterface.Response "处理存在异常"
+// @Failure 403 {object} api.Response "权限不足"
+// @Failure 501 {object} api.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/project [put]
 func putProject(ctx iris.Context) {
-	cmdb.PutDbInfoById(ctx, "get-projects", &db.Project{}, apiInterface.NormalSpecialTask)
+	cmdb.PutDbInfoById(ctx, "get-projects", &db.Project{}, api.NormalSpecialTask)
 }
 
 // @Summary 删除项目信息
@@ -69,10 +69,10 @@ func putProject(ctx iris.Context) {
 // @tags project
 // @Accept json
 // @Produce json
-// @Success 200 {object} apiInterface.Response "ok"
+// @Success 200 {object} api.Response "ok"
 // @Failure 401 string string "未授权"
-// @Failure 403 {object} apiInterface.Response "权限不足"
-// @Failure 501 {object} apiInterface.Response "处理存在异常"
+// @Failure 403 {object} api.Response "权限不足"
+// @Failure 501 {object} api.Response "处理存在异常"
 // @Security ApiKeyAuth
 // @Router /api/v1/project [delete]
 func deleteProjects(ctx iris.Context) {

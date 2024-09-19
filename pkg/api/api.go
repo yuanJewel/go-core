@@ -1,14 +1,14 @@
 package api
 
 import (
-	apiInterface "github.com/SmartLyu/go-core/api"
+	"github.com/SmartLyu/go-core/api"
 	"github.com/SmartLyu/go-core/cmdb"
 	"github.com/SmartLyu/go-core/pkg/config"
 	"github.com/kataras/iris/v12"
 )
 
 type Object struct {
-	apiInterface.Object
+	api.Object
 }
 
 func (Object) GetAuth() string {
