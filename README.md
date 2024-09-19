@@ -23,7 +23,6 @@ make run    # 运行任务
 ├── Dockerfile          (构建镜像，可以参照本项目)
 ├── Makefile            (编译文件，可以参照本项目)
 ├── README.md
-├── VERSION             (记录版本号，配合编译文件构建制品)
 ├── application.yml     (默认配置文件，不建议提交到git中)
 ├── go.mod              (go mod init 自动生成)
 ├── main.go             (入口文件，可以参照本项目)
