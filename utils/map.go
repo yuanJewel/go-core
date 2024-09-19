@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -77,6 +79,18 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 					fieldValue.Set(reflect.ValueOf(nestedStruct).Elem())
 				}
 			} else {
+				if reflect.TypeOf(value).Kind() != fieldValue.Kind() {
+					if fieldValue.Kind() == reflect.Int && reflect.TypeOf(value).Kind() == reflect.String {
+						num, err := strconv.Atoi(value.(string))
+						if err != nil {
+							return err
+						}
+						fieldValue.Set(reflect.ValueOf(num).Convert(fieldValue.Type()))
+						continue
+					} else {
+						return errors.New(fmt.Sprintf("input map %s has wrong type", jsonTag))
+					}
+				}
 				fieldValue.Set(reflect.ValueOf(value).Convert(fieldValue.Type()))
 			}
 		}

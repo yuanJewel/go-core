@@ -25,7 +25,7 @@ func init() {
 }
 
 // @title Swagger SmartLyu go-core API
-// @version 1.1.3
+// @version 1.1.4
 // @description SmartLyu go-core API
 // @contact.name SmartLyu go-core Support
 
@@ -51,7 +51,7 @@ func main() {
 	}
 
 	if *initDb {
-		if err := db.SetupCmdb(&config.GlobalConfig.DataSourceDetail); err != nil {
+		if err := db.SetupCmdb(); err != nil {
 			log.Fatal("Init Database Error...", err)
 		}
 		log.Println("Init Database Success...")
