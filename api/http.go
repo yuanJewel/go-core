@@ -33,6 +33,29 @@ func HttpUtil(method, url string, timeout time.Duration, headers http.Header, bo
 	return resp.StatusCode, _body, err
 }
 
+func ReverserInfoUtil(ctx iris.Context, headers http.Header, body io.Reader, method, path string) (int, []byte) {
+	ctxNew := ctx.Clone()
+
+	if body != nil {
+		req, err := http.NewRequest(ctxNew.Request().Method, ctxNew.Request().URL.String(), body)
+		if err != nil {
+			return http.StatusNotImplemented, nil
+		}
+		rc, ok := body.(io.ReadCloser)
+		if !ok {
+			rc = io.NopCloser(body)
+		}
+		ctxNew.Request().Body = rc
+		ctxNew.Request().GetBody = req.GetBody
+	}
+
+	headers.Set("Authorization", ctxNew.GetHeader("Authorization"))
+	headers.Set("traceId", ctxNew.GetHeader("traceId"))
+	ctxNew.Request().Header = headers
+
+	return ReverserUtil(ctxNew, method, path)
+}
+
 func ReverserUtil(ctx iris.Context, method, path string) (int, []byte) {
 	commandPath := Reverser.Path(path)
 	rec := ctx.Recorder()

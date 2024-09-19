@@ -129,7 +129,7 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	if code != 200 {
 		errResponse, err := api.UnmarshalResponse(reverserBody)
 		if err != nil {
-			api.ReturnErr(api.UnmarshalReponseError, ctx, err, response)
+			api.ReturnErr(api.UnmarshalResponseError, ctx, err, response)
 			return
 		}
 		api.ResponseBody(ctx, response, errResponse)
@@ -191,7 +191,7 @@ func DeleteDb(ctx iris.Context, path string, object interface{}) {
 	if code != 200 {
 		errResponse, err := api.UnmarshalResponse(reverserBody)
 		if err != nil {
-			api.ReturnErr(api.UnmarshalReponseError, ctx, err, response)
+			api.ReturnErr(api.UnmarshalResponseError, ctx, err, response)
 			return
 		}
 		api.ResponseBody(ctx, response, errResponse)

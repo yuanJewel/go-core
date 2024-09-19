@@ -1,5 +1,5 @@
 APP=SmartLyu-go-core
-VERSION=1.1.4
+VERSION=1.1.5
 GITBRANCH=`git symbolic-ref --short -q HEAD`
 GITREVISION=`git log -n1 --format=%H`
 BUILDUSER=luyu151111@gamil.com
@@ -99,7 +99,7 @@ help:
 	@sed -n 's/^##//p' Makefile | column -t -s ':' |  sed -e 's/^/ /'
 
 ## before push code: vet、fmt、fmt-check
-before-push-code: list mod-tidy vet fmt fmt-check swag-build bindata
+before-push-code: list mod-tidy mod-vendor vet fmt fmt-check swag-build bindata
 
 ## all: execute test、build
 all: vet fmt fmt-check test build
