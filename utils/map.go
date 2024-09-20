@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -85,26 +84,69 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 				}
 			} else {
 				if reflect.TypeOf(value).Kind() != fieldValue.Kind() {
-					if fieldValue.Kind() == reflect.Int && reflect.TypeOf(value).Kind() == reflect.String {
-						num, err := strconv.Atoi(value.(string))
-						if err != nil {
-							return err
+					errReturn := fmt.Errorf("input map %s is unsupported kind: %v", jsonTag, fieldValue.Kind())
+					switch v := value.(type) {
+					case string:
+						switch fieldValue.Kind() {
+						case reflect.Int:
+							intValue, err := strconv.Atoi(v)
+							if err != nil {
+								return err
+							}
+							fieldValue.SetInt(int64(intValue))
+						case reflect.Bool:
+							boolValue, err := strconv.ParseBool(v)
+							if err != nil {
+								return err
+							}
+							fieldValue.SetBool(boolValue)
+						case reflect.Float64:
+							floatValue, err := strconv.ParseFloat(v, 64)
+							if err != nil {
+								return err
+							}
+							fieldValue.SetFloat(floatValue)
+						case reflect.Struct:
+							if fieldValue.Type() == reflect.TypeOf(time.Time{}) {
+								parsedTime, err := time.Parse(time.RFC3339, v)
+								if err != nil {
+									return err
+								}
+								fieldValue.Set(reflect.ValueOf(parsedTime).Convert(fieldValue.Type()))
+							} else {
+								return errReturn
+							}
+						default:
+							return errReturn
 						}
-						fieldValue.Set(reflect.ValueOf(num).Convert(fieldValue.Type()))
-						continue
-					} else if fieldValue.Type() == reflect.TypeOf(time.Time{}) &&
-						reflect.TypeOf(value).Kind() == reflect.String {
-						parsedTime, err := time.Parse(time.RFC3339, value.(string))
-						if err != nil {
-							return err
+					case float64:
+						switch fieldValue.Kind() {
+						case reflect.Int:
+							fieldValue.SetInt(int64(v))
+						case reflect.Float64:
+							fieldValue.SetFloat(v)
+						case reflect.Bool:
+							fieldValue.SetBool(v != 0)
+						default:
+							return errReturn
 						}
-						fieldValue.Set(reflect.ValueOf(parsedTime).Convert(fieldValue.Type()))
-						continue
-					} else {
-						return errors.New(fmt.Sprintf("input map %s has wrong type", jsonTag))
+					case int:
+						switch fieldValue.Kind() {
+						case reflect.Int:
+							fieldValue.SetInt(int64(v))
+						case reflect.Float64:
+							fieldValue.SetFloat(float64(v))
+						case reflect.Bool:
+							fieldValue.SetBool(v != 0)
+						default:
+							return errReturn
+						}
+					default:
+						return errReturn
 					}
+				} else {
+					fieldValue.Set(reflect.ValueOf(value).Convert(fieldValue.Type()))
 				}
-				fieldValue.Set(reflect.ValueOf(value).Convert(fieldValue.Type()))
 			}
 		}
 	}
