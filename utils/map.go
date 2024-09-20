@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -53,6 +54,10 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 			continue
 		}
 
+		if strings.Contains(jsonTag, ",") {
+			jsonTag = strings.Split(jsonTag, ",")[0]
+		}
+
 		// 如果字段是嵌套结构体
 		if field.Anonymous {
 			nestedStruct := reflect.New(fieldValue.Type()).Interface()
@@ -69,7 +74,7 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 		// 如果 json 标签匹配 map 中的键
 		if value, ok := m[jsonTag]; ok {
 			// 检查是否是子 map，需要递归
-			if fieldValue.Kind() == reflect.Struct && reflect.TypeOf(value) != reflect.TypeOf(time.Time{}) {
+			if fieldValue.Kind() == reflect.Struct && fieldValue.Type() != reflect.TypeOf(time.Time{}) {
 				nestedStruct := reflect.New(fieldValue.Type()).Interface()
 				nestedMap, ok := value.(map[string]interface{})
 				if ok {
@@ -86,6 +91,14 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 							return err
 						}
 						fieldValue.Set(reflect.ValueOf(num).Convert(fieldValue.Type()))
+						continue
+					} else if fieldValue.Type() == reflect.TypeOf(time.Time{}) &&
+						reflect.TypeOf(value).Kind() == reflect.String {
+						parsedTime, err := time.Parse(time.RFC3339, value.(string))
+						if err != nil {
+							return err
+						}
+						fieldValue.Set(reflect.ValueOf(parsedTime).Convert(fieldValue.Type()))
 						continue
 					} else {
 						return errors.New(fmt.Sprintf("input map %s has wrong type", jsonTag))
