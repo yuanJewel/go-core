@@ -25,9 +25,9 @@ func todayFilename() string {
 }
 
 func newLogFile() *os.File {
-	_logdir := getLogRootPath()
-	if err := Exists(_logdir); err != nil {
-		if err := os.MkdirAll(_logdir, os.FileMode(0777)); err != nil {
+	logDir := getLogRootPath()
+	if err := Exists(logDir); err != nil {
+		if err := os.MkdirAll(logDir, os.FileMode(0777)); err != nil {
 			fmt.Println(err)
 		}
 	}

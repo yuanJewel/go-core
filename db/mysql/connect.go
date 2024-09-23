@@ -11,7 +11,7 @@ import (
 )
 
 type Mysql struct {
-	DbConn *gorm.DB
+	dbConn *gorm.DB
 }
 
 type mysqlLogger struct{}
@@ -20,7 +20,7 @@ func (mysqlLogger) Printf(format string, args ...interface{}) {
 	logger.Log.Errorf(format, args...)
 }
 
-func GetMysqlInstance(cmdbCfgData *config.DataSourceDetail) (*Mysql, error) {
+func GetMysqlInstance(cfgData *config.DataSourceDetail) (*Mysql, error) {
 	newLogger := gormlogger.New(
 		mysqlLogger{},
 		gormlogger.Config{
@@ -31,26 +31,26 @@ func GetMysqlInstance(cmdbCfgData *config.DataSourceDetail) (*Mysql, error) {
 		},
 	)
 
-	dbConnString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local", cmdbCfgData.User, cmdbCfgData.Password, cmdbCfgData.Host, cmdbCfgData.Port, cmdbCfgData.Db, cmdbCfgData.Charset)
+	dbConnString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local", cfgData.User, cfgData.Password, cfgData.Host, cfgData.Port, cfgData.Db, cfgData.Charset)
 	dbConn, err := gorm.Open(mysql.Open(dbConnString), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
 		return nil, err
 	}
-	mysqlInstance := &Mysql{DbConn: dbConn}
+	mysqlInstance := &Mysql{dbConn: dbConn}
 
 	sqlDB, err := dbConn.DB()
 	if err != nil {
 		return nil, err
 	}
 	// Set the maximum number of connections in the idle connection pool.
-	sqlDB.SetMaxIdleConns(cmdbCfgData.IdleConnections)
+	sqlDB.SetMaxIdleConns(cfgData.IdleConnections)
 	// Set the maximum number of open database connections.
-	sqlDB.SetMaxOpenConns(cmdbCfgData.MaxConnections)
+	sqlDB.SetMaxOpenConns(cfgData.MaxConnections)
 	// Set the maximum time that a connection can be reused.
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	logger.Log.Infof("连接数据库 %s ，空闲连接数 %d ， 最大连接数 %d", cmdbCfgData.Host, cmdbCfgData.IdleConnections, cmdbCfgData.MaxConnections)
+	logger.Log.Infof("连接数据库 %s ，空闲连接数 %d ， 最大连接数 %d", cfgData.Host, cfgData.IdleConnections, cfgData.MaxConnections)
 	return mysqlInstance, nil
 }

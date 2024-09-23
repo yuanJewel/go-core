@@ -1,11 +1,9 @@
 package db
 
-import (
-	"github.com/SmartLyu/go-core/cmdb"
-)
+import "github.com/SmartLyu/go-core/db/service"
 
 func SetupCmdb() error {
-	if err := cmdb.Instance.Setup([]interface{}{
+	if err := service.Instance.Setup([]interface{}{
 		&Project{},
 	}); err != nil {
 		return err

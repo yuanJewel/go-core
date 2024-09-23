@@ -1,23 +1,24 @@
-package cmdb
+package service
 
 import (
 	"errors"
 	"github.com/SmartLyu/go-core/config"
-	"github.com/SmartLyu/go-core/mysql"
+	"github.com/SmartLyu/go-core/db"
+	"github.com/SmartLyu/go-core/db/mysql"
 	"strings"
 )
 
-var Instance Service
+var Instance db.Service
 
-// InitCmdb Get the cmdb instance, the default is mysql
-func InitCmdb(cmdbCfgData *config.DataSourceDetail) error {
-	cmdbDriver := cmdbCfgData.Driver
+// InitDb Get the cmdb instance, the default is mysql
+func InitDb(cfgData *config.DataSourceDetail) error {
+	cmdbDriver := cfgData.Driver
 	var err error
 	switch strings.ToLower(cmdbDriver) {
 	case "oracle":
 		return nil
 	default:
-		Instance, err = mysql.GetMysqlInstance(cmdbCfgData)
+		Instance, err = mysql.GetMysqlInstance(cfgData)
 		if err != nil {
 			return err
 		}

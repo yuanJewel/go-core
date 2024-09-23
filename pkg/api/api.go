@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/SmartLyu/go-core/api"
-	"github.com/SmartLyu/go-core/cmdb"
+	"github.com/SmartLyu/go-core/db/service"
 	"github.com/SmartLyu/go-core/pkg/config"
 	"github.com/kataras/iris/v12"
 )
@@ -34,7 +34,7 @@ func (Object) AuthenticateApi(ctx iris.Context) {
 func (Object) Health() func() map[string]error {
 	return func() map[string]error {
 		errList := map[string]error{}
-		errList["cmdb"] = cmdb.Instance.HealthCheck()
+		errList["cmdb"] = service.Instance.HealthCheck()
 		return errList
 	}
 }

@@ -1,4 +1,4 @@
-package cmdb
+package service
 
 import (
 	"encoding/json"
@@ -35,7 +35,17 @@ func initIdsString(ids string) string {
 func GetDbInfoByIds(ctx iris.Context, search, object interface{}) {
 	response := api.ResponseInit(ctx)
 	ids := initIdsString(ctx.GetHeader("ids"))
-	_, err := Instance.GetItemsByIds(search, object, ids)
+	body, err := ctx.GetBody()
+	if err != nil {
+		api.ReturnErr(api.GetBodyError, ctx, err, response)
+		return
+	}
+	err = json.Unmarshal(body, &search)
+	if err != nil && len(body) != 0 {
+		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
+		return
+	}
+	_, err = Instance.GetItemsByIds(search, object, ids)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
@@ -51,8 +61,17 @@ func GetDbInfoByIdsAndKey(ctx iris.Context, search, object interface{}, key stri
 	response := api.ResponseInit(ctx)
 	ids := initIdsString(ctx.GetHeader("ids"))
 	keys := initIdsString(ctx.GetHeader(key))
-
-	_, err := Instance.GetItemsByIdsAndSlices(search, object, ids, key, keys)
+	body, err := ctx.GetBody()
+	if err != nil {
+		api.ReturnErr(api.GetBodyError, ctx, err, response)
+		return
+	}
+	err = json.Unmarshal(body, &search)
+	if err != nil && len(body) != 0 {
+		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
+		return
+	}
+	_, err = Instance.GetItemsByIdsAndSlices(search, object, ids, key, keys)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return

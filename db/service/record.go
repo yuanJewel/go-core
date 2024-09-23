@@ -1,10 +1,10 @@
-package cmdb
+package service
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/SmartLyu/go-core/api"
-	"github.com/SmartLyu/go-core/db"
+	"github.com/SmartLyu/go-core/db/object"
 	"github.com/SmartLyu/go-core/logger"
 	"github.com/SmartLyu/go-core/utils"
 	"github.com/fatih/structs"
@@ -26,7 +26,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionName = "unknown_function"
 		functionFile = ""
 		functionLine = 0
-		user         db.User
+		user         object.User
 		username     = api.GetUserName(ctx)
 		tranceId     = ctx.Request().Header.Get("traceId")
 	)
@@ -37,7 +37,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionFile = pcFile
 		functionLine = pcLine
 	}
-	userExist, err := Instance.GetItem(db.User{Name: username}, &user)
+	userExist, err := Instance.GetItem(object.User{Name: username}, &user)
 	if err != nil {
 		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
 			WithField("callerLine", functionLine).Errorln(err)
@@ -54,7 +54,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 			WithField("callerLine", functionLine).Errorf("cannot get body: %v", body)
 	}
 
-	if _, err := Instance.AddItem(&db.AssetRecord{
+	if _, err := Instance.AddItem(&object.AssetRecord{
 		TranceId:     tranceId,
 		UpdateTime:   time.Now(),
 		UpdateUserId: user.ID,
@@ -78,7 +78,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 	}
 
 	var (
-		changeTable = make([]db.TableAffect, 0)
+		changeTable = make([]object.TableAffect, 0)
 		actionList  = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
 		tranceId    = ctx.Request().Header.Get("traceId")
 	)
@@ -105,7 +105,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 			entry.Errorf("cannot get action: %v", unknownClauses)
 		}
 		for _, primaryId := range primaryIds {
-			changeTable = append(changeTable, db.TableAffect{
+			changeTable = append(changeTable, object.TableAffect{
 				TranceId:     tranceId,
 				UpdateTime:   time.Now(),
 				UpdateUserId: userId,

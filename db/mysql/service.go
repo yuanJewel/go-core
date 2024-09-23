@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	object "github.com/SmartLyu/go-core/db"
+	"github.com/SmartLyu/go-core/db"
+	"github.com/SmartLyu/go-core/db/object"
 	"github.com/SmartLyu/go-core/logger"
 	"gorm.io/gorm"
 	"reflect"
@@ -12,16 +13,28 @@ import (
 )
 
 func (m *Mysql) HealthCheck() error {
-	db := m.DbConn.Exec("select 1")
-	return db.Error
+	d := m.dbConn.Exec("select 1")
+	return d.Error
 }
 
 func (m *Mysql) GetTables() ([]string, error) {
-	return m.DbConn.Migrator().GetTables()
+	return m.dbConn.Migrator().GetTables()
 }
 
-func (m *Mysql) HasTable(tablename string) bool {
-	return m.DbConn.Migrator().HasTable(tablename)
+func (m *Mysql) HasTable(tableName string) bool {
+	return m.dbConn.Migrator().HasTable(tableName)
+}
+
+func (m *Mysql) Preload(query string, args ...interface{}) db.Service {
+	return &Mysql{dbConn: m.dbConn.Preload(query, args)}
+}
+
+func (m *Mysql) Joins(query string, args ...interface{}) db.Service {
+	return &Mysql{dbConn: m.dbConn.Joins(query, args)}
+}
+
+func (m *Mysql) Where(query string, args ...interface{}) db.Service {
+	return &Mysql{dbConn: m.dbConn.Where(query, args)}
 }
 
 // AddItem input must be an interface type
@@ -29,7 +42,7 @@ func (m *Mysql) AddItem(item interface{}, affectRows int64) (*gorm.DB, error) {
 	if err := checkInput(item, reflect.Struct, reflect.Slice); err != nil {
 		return nil, err
 	}
-	transaction := m.DbConn.Begin()
+	transaction := m.dbConn.Begin()
 	result := transaction.Create(item)
 	if result.Error != nil {
 		return result, result.Error
@@ -46,7 +59,7 @@ func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows int64) (
 	if err := checkInput(new, reflect.Struct); err != nil {
 		return nil, err
 	}
-	transaction := m.DbConn.Begin()
+	transaction := m.dbConn.Begin()
 	result := transaction.Where(old).Updates(new)
 	if result.Error != nil {
 		return result, result.Error
@@ -63,7 +76,7 @@ func (m *Mysql) DeleteItem(item interface{}, affectRows int64) (*gorm.DB, error)
 	if err := checkInput(item, reflect.Struct, reflect.Slice); err != nil {
 		return nil, err
 	}
-	transaction := m.DbConn.Begin()
+	transaction := m.dbConn.Begin()
 	result := transaction.Delete(item)
 	if result.Error != nil {
 		return result, result.Error
@@ -80,7 +93,7 @@ func (m *Mysql) GetItems(find interface{}, get interface{}) (bool, error) {
 	if err := checkInput(get, reflect.Slice); err != nil {
 		return false, err
 	}
-	result := m.DbConn.Where(find).Find(get)
+	result := m.dbConn.Where(find).Find(get)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
@@ -92,31 +105,7 @@ func (m *Mysql) GetItemsOrder(find interface{}, get interface{}, order string) (
 	if err := checkInput(get, reflect.Slice); err != nil {
 		return false, err
 	}
-	result := m.DbConn.Order(order).Where(find).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-	return result.RowsAffected != 0, result.Error
-}
-
-// GetItemsFromSlice input get must be an interface type
-func (m *Mysql) GetItemsFromSlice(find interface{}, get interface{}, args ...interface{}) (bool, error) {
-	if err := checkInput(get, reflect.Slice); err != nil {
-		return false, err
-	}
-	result := m.DbConn.Where(find, args...).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-	return result.RowsAffected != 0, result.Error
-}
-
-// GetItemsFromSliceOrder input get must be an interface type
-func (m *Mysql) GetItemsFromSliceOrder(find interface{}, order string, get interface{}, args ...interface{}) (bool, error) {
-	if err := checkInput(get, reflect.Slice); err != nil {
-		return false, err
-	}
-	result := m.DbConn.Order(order).Where(find, args...).Find(get)
+	result := m.dbConn.Order(order).Where(find).Find(get)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
@@ -128,7 +117,7 @@ func (m *Mysql) GetItemsFromDataAndSlice(find interface{}, query string, get int
 	if err := checkInput(get, reflect.Slice); err != nil {
 		return false, err
 	}
-	result := m.DbConn.Where(find).Where(query, args...).Find(get)
+	result := m.dbConn.Where(find).Where(query, args...).Find(get)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
@@ -140,7 +129,7 @@ func (m *Mysql) GetItemsFromDataAndSliceOrder(find interface{}, query, order str
 	if err := checkInput(get, reflect.Slice); err != nil {
 		return false, err
 	}
-	result := m.DbConn.Order(order).Where(find).Where(query, args...).Find(get)
+	result := m.dbConn.Order(order).Where(find).Where(query, args...).Find(get)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
@@ -154,7 +143,7 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 	}
 
 	// Check if the query rule will only get one
-	row := m.DbConn.Model(get).Where(find).Find(&[]struct{}{}).RowsAffected
+	row := m.dbConn.Model(get).Where(find).Find(&[]struct{}{}).RowsAffected
 	if row > 1 {
 		var _func_name = "unkown_function"
 		pc, _, _, ok := runtime.Caller(1)
@@ -166,7 +155,7 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 		return false, object.SelectOverOneError
 	}
 
-	result := m.DbConn.Where(find).First(get)
+	result := m.dbConn.Where(find).First(get)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}

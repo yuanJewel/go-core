@@ -11,8 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SmartLyu/go-core/api"
-	"github.com/SmartLyu/go-core/cmdb"
-	"github.com/SmartLyu/go-core/db"
+	"github.com/SmartLyu/go-core/db/object"
+	"github.com/SmartLyu/go-core/db/service"
 	"github.com/SmartLyu/go-core/logger"
 	"github.com/SmartLyu/go-core/pkg/config"
 	"github.com/SmartLyu/go-core/utils"
@@ -44,7 +44,7 @@ func authenticate(ctx iris.Context) {
 
 	var (
 		auth_object AuthenticateConfig
-		_user       db.User
+		_user       object.User
 	)
 	err = json.Unmarshal(body, &auth_object)
 	if err != nil {
@@ -52,7 +52,7 @@ func authenticate(ctx iris.Context) {
 		return
 	}
 
-	_user_exist, err := cmdb.Instance.GetItem(db.User{Name: auth_object.Username}, &_user)
+	_user_exist, err := service.Instance.GetItem(object.User{Name: auth_object.Username}, &_user)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
@@ -82,7 +82,7 @@ func authenticate(ctx iris.Context) {
 		"refresh":  time.Now().Add(time.Duration(config.GlobalConfig.Auth.Refresh) * time.Minute).Unix(),
 	}
 	if _user_exist {
-		if _, err := cmdb.Instance.UpdateItem(_user, &db.User{LastLoginTime: time.Now()}, 1); err != nil {
+		if _, err := service.Instance.UpdateItem(_user, &object.User{LastLoginTime: time.Now()}, 1); err != nil {
 			api.ReturnErr(api.UpdateDbError, ctx, err, response)
 			return
 		}

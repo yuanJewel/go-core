@@ -4,7 +4,7 @@ import (
 	"fmt"
 	apiInterface "github.com/SmartLyu/go-core/api"
 	"github.com/SmartLyu/go-core/asset"
-	"github.com/SmartLyu/go-core/cmdb"
+	"github.com/SmartLyu/go-core/db/service"
 	_ "github.com/SmartLyu/go-core/docs"
 	"github.com/SmartLyu/go-core/pkg/api"
 	"github.com/SmartLyu/go-core/pkg/config"
@@ -25,7 +25,7 @@ func init() {
 }
 
 // @title Swagger SmartLyu go-core API
-// @version 1.1.9
+// @version 1.2.0
 // @description SmartLyu go-core API
 // @contact.name SmartLyu go-core Support
 
@@ -58,7 +58,7 @@ func main() {
 		return
 	}
 
-	if err := cmdb.InitCmdb(&config.GlobalConfig.DataSourceDetail); err != nil {
+	if err := service.InitDb(&config.GlobalConfig.DataSourceDetail); err != nil {
 		log.Fatal("Init Database Error...", err)
 	}
 
