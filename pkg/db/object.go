@@ -1,8 +1,8 @@
 package db
 
 type Project struct {
-	ID          string `gorm:"column:id;type:varchar(255);primary_key" json:"id"`
-	ProjectInfo `json:"detail"`
+	ID string `gorm:"column:id;type:varchar(255);primary_key" json:"id"`
+	ProjectInfo
 }
 
 type ProjectInfo struct {

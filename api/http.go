@@ -1,12 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/SmartLyu/go-core/logger"
 	"github.com/kataras/iris/v12"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -14,6 +16,15 @@ const (
 	HttpTimeout     = 10
 	HttpReadTimeout = 900
 )
+
+var (
+	NilBody   = bytes.NewBuffer([]byte(""))
+	NilHeader = http.Header{}
+)
+
+func Fusion(u ...string) string {
+	return strings.Join(u, "/")
+}
 
 func HttpUtil(method, url string, timeout time.Duration, headers http.Header, body io.Reader) (int, []byte, error) {
 	req, err := http.NewRequest(method, url, body)
@@ -49,9 +60,11 @@ func ReverserInfoUtil(ctx iris.Context, response *Response, headers http.Header,
 		ctxNew.Request().GetBody = req.GetBody
 	}
 
-	headers.Set("Authorization", ctxNew.GetHeader("Authorization"))
-	headers.Set("traceId", ctxNew.GetHeader("traceId"))
-	ctxNew.Request().Header = headers
+	if headers != nil {
+		headers.Set("Authorization", ctxNew.GetHeader("Authorization"))
+		headers.Set("traceId", ctxNew.GetHeader("traceId"))
+		ctxNew.Request().Header = headers
+	}
 
 	code, reverserBody := ReverserUtil(ctxNew, response, method, path)
 	if code != http.StatusOK {

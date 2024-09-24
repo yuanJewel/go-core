@@ -81,7 +81,6 @@ func GetDbInfoByIdsAndKey(ctx iris.Context, search, object interface{}, key stri
 
 // PostDbInfo 批量添加数据
 // 要求body传入的结构和db中定义的struct对象一致
-// db中需要定义两层结构，detail json字段引用数据层，外加一个ID字段，作为uuid
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 // special 函数，可以修改bodyObject，如添加自定义字段
 func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]interface{}) error) {
@@ -103,19 +102,17 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 	}
 
 	for _, _info := range bodyInfo {
-		_bodyObject := make(map[string]interface{})
 		_exist, err := Instance.GetItems(_info, object)
 		if err != nil {
 			api.ReturnErr(api.SelectDbError, ctx, err, response)
 			return
 		}
 		if !_exist {
-			_bodyObject["detail"] = _info
-			if err = special(&_bodyObject); err != nil {
+			if err = special(&_info); err != nil {
 				api.ReturnErr(api.SpecialReturnError, ctx, err, response)
 				return
 			}
-			needAddSlice = append(needAddSlice, _bodyObject)
+			needAddSlice = append(needAddSlice, _info)
 		}
 	}
 
@@ -138,13 +135,13 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 
 // PutDbInfoById 修改指定
 // 要求body传入的结构和db中定义的struct对象一致
-// db中需要定义两层结构，detail json字段引用数据层，外加一个ID字段，作为uuid
 // special 函数，可以修改bodyObject，如添加自定义字段
 func PutDbInfoById(ctx iris.Context, path string, object interface{}, special func(*map[string]interface{}) error) {
 	response := api.ResponseInit(ctx)
 	id := ctx.GetHeader("id")
-	ctx.Request().Header.Set("ids", fmt.Sprintf("[\"%s\"]", id))
-	code, reverserBody := api.ReverserUtil(ctx, response, http.MethodGet, path)
+	header := http.Header{}
+	header.Set("ids", id)
+	code, reverserBody := api.ReverserInfoUtil(ctx, response, header, api.NilBody, http.MethodGet, path)
 	if code != 200 {
 		return
 	}
@@ -157,7 +154,6 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	var (
 		returnObject responseStruct
 		bodyInfo     = make(map[string]interface{})
-		updateInfo   = make(map[string]interface{})
 	)
 	if err = json.Unmarshal(reverserBody, &returnObject); err != nil {
 		api.ReturnErr(api.GetBodyError, ctx, err, response)
@@ -175,14 +171,14 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
 		return
 	}
-	updateInfo["detail"] = bodyInfo
-	updateInfo["id"] = id
-	if err = special(&updateInfo); err != nil {
+
+	bodyInfo["id"] = id
+	if err = special(&bodyInfo); err != nil {
 		api.ReturnErr(api.SpecialReturnError, ctx, err, response)
 		return
 	}
 
-	if err = utils.MapToStruct(updateInfo, object); err != nil {
+	if err = utils.MapToStruct(bodyInfo, object); err != nil {
 		api.ReturnErr(api.ReflectError, ctx, err, response)
 		return
 	}

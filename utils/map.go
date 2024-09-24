@@ -46,28 +46,24 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 	for i := 0; i < objType.NumField(); i++ {
 		field := objType.Field(i)
 		fieldValue := objValue.Field(i)
-		jsonTag := field.Tag.Get("json") // 获取字段的 json 标签
-
-		// 如果 json 标签为空或忽略此字段，跳过
-		if jsonTag == "" || jsonTag == "-" {
-			continue
-		}
-
-		if strings.Contains(jsonTag, ",") {
-			jsonTag = strings.Split(jsonTag, ",")[0]
-		}
 
 		// 如果字段是嵌套结构体
 		if field.Anonymous {
 			nestedStruct := reflect.New(fieldValue.Type()).Interface()
-			nestedMap, ok := m[jsonTag].(map[string]interface{})
-			if ok {
-				if err := MapToStruct(nestedMap, nestedStruct); err != nil {
-					return err
-				}
-				fieldValue.Set(reflect.ValueOf(nestedStruct).Elem())
+			if err := MapToStruct(m, nestedStruct); err != nil {
+				return err
 			}
+			fieldValue.Set(reflect.ValueOf(nestedStruct).Elem())
 			continue
+		}
+
+		// 获取字段的 json 标签
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
+			continue
+		}
+		if strings.Contains(jsonTag, ",") {
+			jsonTag = strings.Split(jsonTag, ",")[0]
 		}
 
 		// 如果 json 标签匹配 map 中的键
