@@ -36,6 +36,17 @@ func InSlice(key interface{}, slice interface{}) bool {
 	return false
 }
 
+func getJsonTag(field reflect.StructField) (bool, string) {
+	tag := field.Tag.Get("json")
+	if tag == "" || tag == "-" {
+		return false, ""
+	}
+	if strings.Contains(tag, ",") {
+		tag = strings.Split(tag, ",")[0]
+	}
+	return true, tag
+}
+
 // MapToStruct 将单个 map 转换为 struct
 func MapToStruct(m map[string]interface{}, obj interface{}) error {
 	// 获取 obj 的类型
@@ -50,20 +61,26 @@ func MapToStruct(m map[string]interface{}, obj interface{}) error {
 		// 如果字段是嵌套结构体
 		if field.Anonymous {
 			nestedStruct := reflect.New(fieldValue.Type()).Interface()
-			if err := MapToStruct(m, nestedStruct); err != nil {
-				return err
+			if ok, jsonTag := getJsonTag(field); ok {
+				nestedMap, ok := m[jsonTag].(map[string]interface{})
+				if ok {
+					if err := MapToStruct(nestedMap, nestedStruct); err != nil {
+						return err
+					}
+				}
+			} else {
+				if err := MapToStruct(m, nestedStruct); err != nil {
+					return err
+				}
 			}
 			fieldValue.Set(reflect.ValueOf(nestedStruct).Elem())
 			continue
 		}
 
 		// 获取字段的 json 标签
-		jsonTag := field.Tag.Get("json")
-		if jsonTag == "" || jsonTag == "-" {
+		ok, jsonTag := getJsonTag(field)
+		if !ok {
 			continue
-		}
-		if strings.Contains(jsonTag, ",") {
-			jsonTag = strings.Split(jsonTag, ",")[0]
 		}
 
 		// 如果 json 标签匹配 map 中的键
