@@ -102,16 +102,16 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 	}
 
 	for _, _info := range bodyInfo {
+		if err = special(&_info); err != nil {
+			api.ReturnErr(api.SpecialReturnError, ctx, err, response)
+			return
+		}
 		_exist, err := Instance.GetItems(_info, object)
 		if err != nil {
 			api.ReturnErr(api.SelectDbError, ctx, err, response)
 			return
 		}
 		if !_exist {
-			if err = special(&_info); err != nil {
-				api.ReturnErr(api.SpecialReturnError, ctx, err, response)
-				return
-			}
 			needAddSlice = append(needAddSlice, _info)
 		}
 	}
