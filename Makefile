@@ -1,5 +1,5 @@
 APP=SmartLyu-go-core
-VERSION=1.2.1
+VERSION=1.2.2
 GITBRANCH=`git symbolic-ref --short -q HEAD`
 GITREVISION=`git log -n1 --format=%H`
 BUILDUSER=luyu151111@gamil.com

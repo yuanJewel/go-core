@@ -3,11 +3,11 @@ package mysql
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/SmartLyu/go-core/db"
 	"github.com/SmartLyu/go-core/db/object"
 	"github.com/SmartLyu/go-core/logger"
 	"gorm.io/gorm"
+	"math"
 	"reflect"
 	"runtime"
 )
@@ -26,15 +26,56 @@ func (m *Mysql) HasTable(tableName string) bool {
 }
 
 func (m *Mysql) Preload(query string, args ...interface{}) db.Service {
-	return &Mysql{dbConn: m.dbConn.Preload(query, args)}
+	return &Mysql{dbConn: m.dbConn.Preload(query, args), mysqlConfig: m.mysqlConfig}
 }
 
 func (m *Mysql) Joins(query string, args ...interface{}) db.Service {
-	return &Mysql{dbConn: m.dbConn.Joins(query, args)}
+	return &Mysql{dbConn: m.dbConn.Joins(query, args), mysqlConfig: m.mysqlConfig}
 }
 
 func (m *Mysql) Where(query string, args ...interface{}) db.Service {
-	return &Mysql{dbConn: m.dbConn.Where(query, args)}
+	return &Mysql{dbConn: m.dbConn.Where(query, args), mysqlConfig: m.mysqlConfig}
+}
+
+func (m *Mysql) Search(query string, keys string) db.Service {
+	var (
+		_idsInt []int
+		_idsStr []string
+	)
+	if keys == "*" {
+		return m
+	} else {
+		if err := json.Unmarshal([]byte(keys), &_idsInt); err != nil {
+			if err := json.Unmarshal([]byte(keys), &_idsStr); err != nil {
+				returnMysql := &Mysql{dbConn: m.dbConn, mysqlConfig: m.mysqlConfig}
+				_ = returnMysql.dbConn.AddError(err)
+				return returnMysql
+			} else {
+				return &Mysql{dbConn: m.dbConn.Where(query, _idsStr), mysqlConfig: m.mysqlConfig}
+			}
+		} else {
+			return &Mysql{dbConn: m.dbConn.Where(query, _idsInt), mysqlConfig: m.mysqlConfig}
+		}
+
+	}
+}
+
+func (m *Mysql) Order(order string) db.Service {
+	return &Mysql{dbConn: m.dbConn.Order(order), mysqlConfig: m.mysqlConfig}
+}
+
+func (m *Mysql) OffsetPages(pages int) db.Service {
+	return &Mysql{dbConn: m.dbConn, mysqlConfig: mysqlConfig{
+		maxSearchLimit: m.mysqlConfig.maxSearchLimit,
+		offsetPages:    pages,
+	}}
+}
+
+func (m *Mysql) Limit(limit int) db.Service {
+	return &Mysql{dbConn: m.dbConn, mysqlConfig: mysqlConfig{
+		maxSearchLimit: limit,
+		offsetPages:    m.mysqlConfig.offsetPages,
+	}}
 }
 
 // AddItem input must be an interface type
@@ -89,51 +130,18 @@ func (m *Mysql) DeleteItem(item interface{}, affectRows int64) (*gorm.DB, error)
 }
 
 // GetItems input get must be an interface type
-func (m *Mysql) GetItems(find interface{}, get interface{}) (bool, error) {
+func (m *Mysql) GetItems(find interface{}, get interface{}) (int64, error) {
+	var total int64 = 0
 	if err := checkInput(get, reflect.Slice); err != nil {
-		return false, err
+		return total, err
 	}
-	result := m.dbConn.Where(find).Find(get)
+	result := m.dbConn.Where(find).Model(get).Count(&total).
+		Offset(m.mysqlConfig.offsetPages * m.mysqlConfig.maxSearchLimit).
+		Limit(m.mysqlConfig.maxSearchLimit).Find(get)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, nil
+		return total, nil
 	}
-	return result.RowsAffected != 0, result.Error
-}
-
-// GetItemsOrder input get must be an interface type
-func (m *Mysql) GetItemsOrder(find interface{}, get interface{}, order string) (bool, error) {
-	if err := checkInput(get, reflect.Slice); err != nil {
-		return false, err
-	}
-	result := m.dbConn.Order(order).Where(find).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-	return result.RowsAffected != 0, result.Error
-}
-
-// GetItemsFromDataAndSlice input get must be an interface type
-func (m *Mysql) GetItemsFromDataAndSlice(find interface{}, query string, get interface{}, args ...interface{}) (bool, error) {
-	if err := checkInput(get, reflect.Slice); err != nil {
-		return false, err
-	}
-	result := m.dbConn.Where(find).Where(query, args...).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-	return result.RowsAffected != 0, result.Error
-}
-
-// GetItemsFromDataAndSliceOrder input get must be an interface type
-func (m *Mysql) GetItemsFromDataAndSliceOrder(find interface{}, query, order string, get interface{}, args ...interface{}) (bool, error) {
-	if err := checkInput(get, reflect.Slice); err != nil {
-		return false, err
-	}
-	result := m.dbConn.Order(order).Where(find).Where(query, args...).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-	return result.RowsAffected != 0, result.Error
+	return int64(math.Ceil(float64(total) / float64(m.mysqlConfig.maxSearchLimit))), result.Error
 }
 
 // GetItem input get must be an interface type
@@ -143,14 +151,14 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 	}
 
 	// Check if the query rule will only get one
-	row := m.dbConn.Model(get).Where(find).Find(&[]struct{}{}).RowsAffected
+	row := m.dbConn.Model(get).Where(find).Limit(m.mysqlConfig.maxSearchLimit).Find(&[]struct{}{}).RowsAffected
 	if row > 1 {
 		var _func_name = "unkown_function"
 		pc, _, _, ok := runtime.Caller(1)
 		if ok {
 			_func_name = runtime.FuncForPC(pc).Name()
 		}
-		logger.Log.Errorf("方法 %s 执行插入表数据, 查询逻辑可以获取%d条记录，但是程序只需要一条记录",
+		logger.Log.Errorf("方法 %s 执行查询表数据, 查询逻辑可以获取%d条记录，但是程序只需要一条记录",
 			_func_name, row)
 		return false, object.SelectOverOneError
 	}
@@ -160,97 +168,6 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 		return false, nil
 	}
 	return true, result.Error
-}
-
-// GetItemsByIds input get must be an interface type
-func (m *Mysql) GetItemsByIds(find interface{}, get interface{}, ids string) (bool, error) {
-	var (
-		_isString = false
-		_idsInt   []int
-		_idsStr   []string
-		_exist    bool
-		err       error
-	)
-	if ids == "*" {
-		_exist, err = m.GetItems(find, get)
-	} else {
-		if err := json.Unmarshal([]byte(ids), &_idsInt); err != nil {
-			if err := json.Unmarshal([]byte(ids), &_idsStr); err != nil {
-				return false, errors.New("input ids is not a list")
-			} else {
-				_isString = true
-			}
-		}
-		if _isString {
-			_exist, err = m.GetItemsFromDataAndSlice(find, "id IN ?", get, _idsStr)
-		} else {
-			_exist, err = m.GetItemsFromDataAndSlice(find, "id IN ?", get, _idsInt)
-		}
-	}
-	if err != nil {
-		return false, err
-	}
-	return _exist, nil
-}
-
-// GetItemsByIdsOrder input get must be an interface type
-func (m *Mysql) GetItemsByIdsOrder(find interface{}, get interface{}, ids, order string) (bool, error) {
-	var (
-		_isString = false
-		_idsInt   []int
-		_idsStr   []string
-		_exist    bool
-		err       error
-	)
-	if ids == "*" {
-		_exist, err = m.GetItemsOrder(find, get, order)
-	} else {
-		if err := json.Unmarshal([]byte(ids), &_idsInt); err != nil {
-			if err := json.Unmarshal([]byte(ids), &_idsStr); err != nil {
-				return false, errors.New("input ids is not a list")
-			} else {
-				_isString = true
-			}
-		}
-		if _isString {
-			_exist, err = m.GetItemsFromDataAndSliceOrder(find, "id IN ?", order, get, _idsStr)
-		} else {
-			_exist, err = m.GetItemsFromDataAndSliceOrder(find, "id IN ?", order, get, _idsInt)
-		}
-	}
-	if err != nil {
-		return false, err
-	}
-	return _exist, nil
-}
-
-func (m *Mysql) GetItemsByIdsAndSlices(find interface{}, get interface{}, ids, name, slice string) (bool, error) {
-	var (
-		_slices []string
-		_ids    []string
-		_exist  bool
-		err     error
-	)
-	if slice == "*" {
-		return m.GetItemsByIds(find, get, ids)
-	} else {
-		if err := json.Unmarshal([]byte(slice), &_slices); err != nil {
-			return false, err
-		}
-		if ids == "*" {
-			_exist, err = m.GetItemsFromDataAndSlice(find, fmt.Sprintf("%s IN ?", name), get, _slices)
-		} else {
-			if err := json.Unmarshal([]byte(ids), &_ids); err != nil {
-				return false, err
-			}
-			_exist, err = m.GetItemsFromDataAndSlice(find, fmt.Sprintf("id IN ? AND %s IN ?", name), get, _ids, _slices)
-		}
-	}
-
-	if err != nil {
-		return false, err
-	}
-	return _exist, nil
 }
 
 // checkInput Determine whether the input data is compliant

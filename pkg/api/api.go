@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/SmartLyu/go-core/api"
 	"github.com/SmartLyu/go-core/db/service"
+	"github.com/SmartLyu/go-core/pkg/api/demo"
 	"github.com/SmartLyu/go-core/pkg/config"
 	"github.com/kataras/iris/v12"
 )
@@ -18,13 +19,9 @@ func (Object) GetAuth() string {
 func (Object) Party(app iris.Party) {
 	app.Get("/", index).Name = "index"
 	app.Get("/free/refresh", refresh).Name = "refresh"
-
-	app.Get("/project", getProjects).Name = "get-projects"
-	app.Put("/project", putProject).Name = "put-project"
-	app.Post("/project", postProjects).Name = "post-projects"
-	app.Delete("/project", deleteProjects).Name = "delete-projects"
-
 	app.OnErrorCode(iris.StatusNotFound, notFound)
+
+	demo.Party(app, "/")
 }
 
 func (Object) AuthenticateApi(ctx iris.Context) {

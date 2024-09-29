@@ -11,7 +11,13 @@ import (
 )
 
 type Mysql struct {
-	dbConn *gorm.DB
+	dbConn      *gorm.DB
+	mysqlConfig mysqlConfig
+}
+
+type mysqlConfig struct {
+	maxSearchLimit int
+	offsetPages    int
 }
 
 type mysqlLogger struct{}
@@ -38,7 +44,10 @@ func GetMysqlInstance(cfgData *config.DataSourceDetail) (*Mysql, error) {
 	if err != nil {
 		return nil, err
 	}
-	mysqlInstance := &Mysql{dbConn: dbConn}
+	mysqlInstance := &Mysql{dbConn: dbConn, mysqlConfig: mysqlConfig{
+		maxSearchLimit: cfgData.MaxSearchLimit,
+		offsetPages:    0,
+	}}
 
 	sqlDB, err := dbConn.DB()
 	if err != nil {

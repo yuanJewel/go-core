@@ -33,4 +33,5 @@ type DataSourceDetail struct {
 	Port            int    `default:"3306" yaml:"port" env:"db.port"`
 	IdleConnections int    `default:"1" yaml:"idle_connections" env:"db.idle_connections"`
 	MaxConnections  int    `default:"1" yaml:"max_connections" env:"db.max_connections"`
+	MaxSearchLimit  int    `default:"100" yaml:"max_search_limit" env:"db.max_search_limit"`
 }

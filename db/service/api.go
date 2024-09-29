@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SmartLyu/go-core/api"
+	"github.com/SmartLyu/go-core/logger"
 	"github.com/SmartLyu/go-core/utils"
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -29,38 +31,56 @@ func initIdsString(ids string) string {
 	return returnIds
 }
 
-// GetDbInfoByIds 根据ids获取数据
-// search 搜索条件 必须是在db中定义的struct对象
-// object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
-func GetDbInfoByIds(ctx iris.Context, search, object interface{}) {
-	response := api.ResponseInit(ctx)
-	ids := initIdsString(ctx.GetHeader("ids"))
-	body, err := ctx.GetBody()
-	if err != nil {
-		api.ReturnErr(api.GetBodyError, ctx, err, response)
-		return
+func initPageString(pages, traceId string) int {
+	page := 1
+	if pages != "" {
+		parsedPage, err := strconv.Atoi(pages)
+		if err != nil {
+			logger.Log.WithField("traceId", traceId).WithField("function", "initPageString").
+				Warnf("Failed to parse page number: %s, error: %v", pages, err)
+		} else {
+			page = parsedPage
+		}
 	}
-	err = json.Unmarshal(body, &search)
-	if err != nil && len(body) != 0 {
-		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
-		return
+	if page < 1 {
+		page = 1
 	}
-	_, err = Instance.GetItemsByIds(search, object, ids)
-	if err != nil {
-		api.ReturnErr(api.SelectDbError, ctx, err, response)
-		return
-	}
-	api.ResponseBody(ctx, response, object)
+	return page
 }
 
-// GetDbInfoByIdsAndKey 根据ids获取数据
+func GetDbInfoByIds(ctx iris.Context, search, object interface{}, key ...string) {
+	GetDbInfo(ctx, search, object, append([]string{"id"}, key...), []string{"id"})
+}
+
+func GetDbInfoByIdsAndOrder(ctx iris.Context, search, object interface{}, order ...string) {
+	GetDbInfo(ctx, search, object, []string{"id"}, order)
+}
+
+// GetDbInfo 根据ids获取数据
+// 会从header中获取两个字段，id和page
+// id为检索条件，为空默认为*，检索所有
+// page为分页好，为空默认为1
 // search 搜索条件 必须是在db中定义的struct对象
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 // key 作为需要新增检索的header字段
-func GetDbInfoByIdsAndKey(ctx iris.Context, search, object interface{}, key string) {
+// order 为排序的字段，如果需要倒叙排列格式为"key desc"
+func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []string) {
 	response := api.ResponseInit(ctx)
-	ids := initIdsString(ctx.GetHeader("ids"))
-	keys := initIdsString(ctx.GetHeader(key))
+	page := initPageString(ctx.GetHeader("page"), response.TraceId)
+	instance := Instance
+	for _, key := range keys {
+		if key != "" {
+			keyString := initIdsString(ctx.GetHeader(key))
+			instance = instance.Search(fmt.Sprintf("%s IN ?", key), keyString)
+		}
+	}
+
+	for _, order := range orders {
+		if order != "" {
+			instance = instance.Order(order)
+		}
+	}
+
 	body, err := ctx.GetBody()
 	if err != nil {
 		api.ReturnErr(api.GetBodyError, ctx, err, response)
@@ -71,11 +91,14 @@ func GetDbInfoByIdsAndKey(ctx iris.Context, search, object interface{}, key stri
 		api.ReturnErr(api.JsonUnmarshalError, ctx, err, response)
 		return
 	}
-	_, err = Instance.GetItemsByIdsAndSlices(search, object, ids, key, keys)
+
+	nums, err := instance.OffsetPages(page-1).GetItems(search, object)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
 	}
+	ctx.Header("page", strconv.Itoa(page))
+	ctx.Header("total-pages", strconv.FormatInt(nums, 16))
 	api.ResponseBody(ctx, response, object)
 }
 
@@ -106,12 +129,12 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 			api.ReturnErr(api.SpecialReturnError, ctx, err, response)
 			return
 		}
-		_exist, err := Instance.GetItems(_info, object)
+		nums, err := Instance.GetItems(_info, object)
 		if err != nil {
 			api.ReturnErr(api.SelectDbError, ctx, err, response)
 			return
 		}
-		if !_exist {
+		if nums == 0 {
 			needAddSlice = append(needAddSlice, _info)
 		}
 	}
@@ -140,7 +163,7 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	response := api.ResponseInit(ctx)
 	id := ctx.GetHeader("id")
 	header := http.Header{}
-	header.Set("ids", id)
+	header.Set("id", id)
 	code, reverserBody := api.ReverserInfoUtil(ctx, response, header, api.NilBody, http.MethodGet, path)
 	if code != 200 {
 		return

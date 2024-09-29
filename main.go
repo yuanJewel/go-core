@@ -25,7 +25,7 @@ func init() {
 }
 
 // @title Swagger SmartLyu go-core API
-// @version 1.2.1
+// @version 1.2.2
 // @description SmartLyu go-core API
 // @contact.name SmartLyu go-core Support
 
@@ -50,16 +50,16 @@ func main() {
 		log.Fatal("Load Config Error...", err)
 	}
 
+	if err := service.InitDb(&config.GlobalConfig.DataSourceDetail); err != nil {
+		log.Fatal("Init Database Error...", err)
+	}
+
 	if *initDb {
 		if err := db.SetupCmdb(); err != nil {
 			log.Fatal("Init Database Error...", err)
 		}
 		log.Println("Init Database Success...")
 		return
-	}
-
-	if err := service.InitDb(&config.GlobalConfig.DataSourceDetail); err != nil {
-		log.Fatal("Init Database Error...", err)
 	}
 
 	app, _close := apiInterface.CreateApi(api.Object{}, config.GlobalConfig.Swagger)

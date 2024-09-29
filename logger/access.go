@@ -7,6 +7,7 @@ import (
 	"github.com/kataras/iris/v12/middleware/logger"
 	"github.com/robfig/cron"
 	"github.com/ryanuber/columnize"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -85,6 +86,10 @@ func NewRequestLogger(dot func(...interface{})) (h iris.Handler, close func() er
 	}
 
 	c.LogFuncCtx = func(ctx iris.Context, latency time.Duration) {
+		if ctx.Path() == "/health" && ctx.ResponseWriter().StatusCode() == http.StatusOK {
+			ctx.Next()
+			return
+		}
 		traceId := ctx.Request().Header.Get("traceId")
 		if traceId == "" {
 			traceId = GetTraceId(ctx)

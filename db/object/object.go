@@ -18,7 +18,7 @@ type AssetRecord struct {
 	UpdateUserId int       `gorm:"column:update_user_id;type:int" json:"update_user_id"`
 	Url          string    `gorm:"column:url;type:varchar(255)" json:"url"`
 	Method       string    `gorm:"column:method;type:varchar(255)" json:"method"`
-	Body         string    `gorm:"column:body;type:varchar(255)" json:"body"`
+	Body         string    `gorm:"column:body;type:text" json:"body"`
 	Context      string    `gorm:"column:context;type:text" json:"context"`
 }
 

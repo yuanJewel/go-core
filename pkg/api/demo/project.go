@@ -1,4 +1,4 @@
-package api
+package demo
 
 import (
 	"github.com/SmartLyu/go-core/api"
@@ -10,7 +10,8 @@ import (
 
 // @Summary 获取项目信息
 // @Description 获取项目信息
-// @Param ids header string true "project"
+// @Param id header string true "project"
+// @Param page header string false "page"
 // @Param body body db.ProjectInfo false "Info"
 // @tags project
 // @Accept json
@@ -66,7 +67,7 @@ func putProject(ctx iris.Context) {
 
 // @Summary 删除项目信息
 // @Description 删除项目信息
-// @Param ProjectIds header string true "project"
+// @Param id header string true "project"
 // @tags project
 // @Accept json
 // @Produce json
