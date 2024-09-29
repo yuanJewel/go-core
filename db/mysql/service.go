@@ -3,9 +3,9 @@ package mysql
 import (
 	"encoding/json"
 	"errors"
-	"github.com/SmartLyu/go-core/db"
-	"github.com/SmartLyu/go-core/db/object"
-	"github.com/SmartLyu/go-core/logger"
+	"github.com/yuanJewel/go-core/db"
+	"github.com/yuanJewel/go-core/db/object"
+	"github.com/yuanJewel/go-core/logger"
 	"gorm.io/gorm"
 	"math"
 	"reflect"

@@ -13,7 +13,7 @@ make run    # 运行任务
 
 ### 作为库引用
 
-可以仿照库中pkg目录使用该包，下载方法 `go get github.com/SmartLyu/go-core`
+可以仿照库中pkg目录使用该包，下载方法 `go get github.com/yuanJewel/go-core`
 
 一个简单的web项目可以仿照如下：
 

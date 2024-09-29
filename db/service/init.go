@@ -2,9 +2,9 @@ package service
 
 import (
 	"errors"
-	"github.com/SmartLyu/go-core/config"
-	"github.com/SmartLyu/go-core/db"
-	"github.com/SmartLyu/go-core/db/mysql"
+	"github.com/yuanJewel/go-core/config"
+	"github.com/yuanJewel/go-core/db"
+	"github.com/yuanJewel/go-core/db/mysql"
 	"strings"
 )
 

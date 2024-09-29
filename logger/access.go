@@ -2,11 +2,11 @@ package logger
 
 import (
 	"fmt"
-	"github.com/SmartLyu/go-core/utils"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/logger"
 	"github.com/robfig/cron"
 	"github.com/ryanuber/columnize"
+	"github.com/yuanJewel/go-core/utils"
 	"net/http"
 	"net/url"
 	"os"

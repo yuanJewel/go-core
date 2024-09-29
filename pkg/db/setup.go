@@ -1,6 +1,6 @@
 package db
 
-import "github.com/SmartLyu/go-core/db/service"
+import "github.com/yuanJewel/go-core/db/service"
 
 func SetupCmdb() error {
 	if err := service.Instance.Setup([]interface{}{

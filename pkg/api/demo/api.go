@@ -1,8 +1,8 @@
 package demo
 
 import (
-	"github.com/SmartLyu/go-core/api"
 	"github.com/kataras/iris/v12"
+	"github.com/yuanJewel/go-core/api"
 )
 
 const prefixPath = ""

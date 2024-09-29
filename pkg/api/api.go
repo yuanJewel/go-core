@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/SmartLyu/go-core/api"
-	"github.com/SmartLyu/go-core/db/service"
-	"github.com/SmartLyu/go-core/pkg/api/demo"
-	"github.com/SmartLyu/go-core/pkg/config"
 	"github.com/kataras/iris/v12"
+	"github.com/yuanJewel/go-core/api"
+	"github.com/yuanJewel/go-core/db/service"
+	"github.com/yuanJewel/go-core/pkg/api/demo"
+	"github.com/yuanJewel/go-core/pkg/config"
 )
 
 type Object struct {
@@ -37,7 +37,7 @@ func (Object) Health() func() map[string]error {
 }
 
 func index(ctx iris.Context) {
-	ctx.ViewData("message", "welcome to SmartLyu go-core")
+	ctx.ViewData("message", "welcome to yuanJewel go-core")
 	if err := ctx.View("index.html"); err != nil {
 		return
 	}

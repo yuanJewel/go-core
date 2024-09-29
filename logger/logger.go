@@ -2,8 +2,8 @@ package logger
 
 import (
 	"fmt"
-	"github.com/SmartLyu/go-core/utils"
 	"github.com/sirupsen/logrus"
+	"github.com/yuanJewel/go-core/utils"
 	"os"
 	"path"
 	"strconv"

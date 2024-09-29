@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	apiInterface "github.com/SmartLyu/go-core/api"
-	"github.com/SmartLyu/go-core/asset"
-	"github.com/SmartLyu/go-core/db/service"
-	_ "github.com/SmartLyu/go-core/docs"
-	"github.com/SmartLyu/go-core/pkg/api"
-	"github.com/SmartLyu/go-core/pkg/config"
-	"github.com/SmartLyu/go-core/pkg/db"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/kataras/iris/v12"
 	"github.com/prometheus/common/version"
+	apiInterface "github.com/yuanJewel/go-core/api"
+	"github.com/yuanJewel/go-core/asset"
+	"github.com/yuanJewel/go-core/db/service"
+	_ "github.com/yuanJewel/go-core/docs"
+	"github.com/yuanJewel/go-core/pkg/api"
+	"github.com/yuanJewel/go-core/pkg/config"
+	"github.com/yuanJewel/go-core/pkg/db"
 	"log"
 )
 
@@ -24,12 +24,12 @@ func init() {
 	}
 }
 
-// @title Swagger SmartLyu go-core API
-// @version 1.2.2
-// @description SmartLyu go-core API
-// @contact.name SmartLyu go-core Support
+// @title Swagger yuanJewel go-core API
+// @version 1.3.1
+// @description yuanJewel go-core API
+// @contact.name yuanJewel go-core Support
 
-// @contact.url https://github.com/SmartLyu/go-core/blob/main/README.md
+// @contact.url https://github.com/yuanJewel/go-core/blob/main/README.md
 // @contact.email luyu151111@gmail.com
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in header

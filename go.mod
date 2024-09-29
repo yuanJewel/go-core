@@ -1,4 +1,4 @@
-module github.com/SmartLyu/go-core
+module github.com/yuanJewel/go-core
 
 go 1.23.1
 

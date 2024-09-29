@@ -1,11 +1,11 @@
 package demo
 
 import (
-	"github.com/SmartLyu/go-core/api"
-	"github.com/SmartLyu/go-core/db/service"
-	"github.com/SmartLyu/go-core/pkg/db"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
+	"github.com/yuanJewel/go-core/api"
+	"github.com/yuanJewel/go-core/db/service"
+	"github.com/yuanJewel/go-core/pkg/db"
 )
 
 // @Summary 获取项目信息

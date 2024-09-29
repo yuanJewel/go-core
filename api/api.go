@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/SmartLyu/go-core/logger"
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/iris-contrib/swagger/v12"
 	"github.com/iris-contrib/swagger/v12/swaggerFiles"
@@ -11,6 +10,7 @@ import (
 	"github.com/kataras/iris/v12/middleware/jwt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"github.com/yuanJewel/go-core/logger"
 	"log"
 )
 

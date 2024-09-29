@@ -1,12 +1,12 @@
 FROM alpine:3.20.3
 ARG VERSION
 ARG BUILDUSER
-LABEL PROJECT="SmartLyu-go-core"    \
+LABEL PROJECT="yuan-jewel"    \
       VERSION="$VERSION"            \
       AUTHOR="$BUILDUSER"
-MAINTAINER SmartLyu "luyu151111@gamil.com"
+MAINTAINER yuanJewel "luyu151111@gamil.com"
 ENV LC_ALL en_US.UTF-8
-ADD build/go-core /bin/go-core
-RUN chmod +x /bin/go-core
+ADD build/yuan /bin/yuan
+RUN chmod +x /bin/yuan
 WORKDIR /opt
-ENTRYPOINT ["go-core"]
+ENTRYPOINT ["yuan"]

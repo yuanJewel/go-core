@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/SmartLyu/go-core/config"
 	"github.com/jinzhu/configor"
+	"github.com/yuanJewel/go-core/config"
 )
 
 var (
