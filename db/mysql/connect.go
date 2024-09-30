@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
+	"strings"
 	"time"
 )
 
@@ -23,17 +24,39 @@ type mysqlConfig struct {
 type mysqlLogger struct{}
 
 func (mysqlLogger) Printf(format string, args ...interface{}) {
+	if strings.Contains(format, "fms] [rows") {
+		if strings.Contains(format, "SLOW SQL") {
+			logger.Log.Warnf(format, args...)
+		} else {
+			logger.Log.Debugf(format, args...)
+		}
+		return
+	}
+	if strings.Contains(format, "[warn]") {
+		logger.Log.Warnf(format, args...)
+		return
+	}
+	if strings.Contains(format, "[info]") {
+		logger.Log.Debugf(format, args...)
+		return
+	}
 	logger.Log.Errorf(format, args...)
 }
 
 func GetMysqlInstance(cfgData *config.DataSourceDetail) (*Mysql, error) {
+	logLevel := gormlogger.Warn
+	if logger.Log.Logger.GetLevel() < 3 {
+		logLevel = gormlogger.LogLevel(logger.Log.Logger.GetLevel())
+	} else if logger.Log.Logger.GetLevel() > 4 {
+		logLevel = gormlogger.Info
+	}
 	newLogger := gormlogger.New(
 		mysqlLogger{},
 		gormlogger.Config{
-			SlowThreshold:             time.Second,      // Slow SQL threshold
-			LogLevel:                  gormlogger.Error, // Log level
-			IgnoreRecordNotFoundError: true,             // Ignore ErrRecordNotFound error for logger
-			Colorful:                  false,            // Disable color
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logLevel,    // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,       // Disable color
 		},
 	)
 
