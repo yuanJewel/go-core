@@ -18,7 +18,7 @@ var (
 func init() {
 
 	Log.Logger.SetReportCaller(true)
-	Log.Logger.SetLevel(logrus.InfoLevel)
+	Log.Logger.SetLevel(loglevel())
 	Log.Logger.SetFormatter(&logrus.JSONFormatter{
 		//DisableColors:   true,
 		//FullTimestamp:   true,
@@ -132,4 +132,17 @@ func isLogOutFile() bool {
 		return true
 	}
 	return false
+}
+
+func loglevel() logrus.Level {
+	style := os.Getenv("LOGGER_OUT_LEVEL")
+	if style != "" {
+		l, err := logrus.ParseLevel(style)
+		if err != nil {
+			fmt.Printf("变量LOGGER_OUT_LEVEL(%s)无法解析为正确的level等级", style)
+			panic(err)
+		}
+		return l
+	}
+	return logrus.InfoLevel
 }
