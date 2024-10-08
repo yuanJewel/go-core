@@ -1,11 +1,12 @@
 package mysql
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/yuanJewel/go-core/db"
 	"github.com/yuanJewel/go-core/db/object"
-	"github.com/yuanJewel/go-core/logger"
+	gologger "github.com/yuanJewel/go-core/logger"
 	"gorm.io/gorm"
 	"math"
 	"reflect"
@@ -23,6 +24,10 @@ func (m *Mysql) GetTables() ([]string, error) {
 
 func (m *Mysql) HasTable(tableName string) bool {
 	return m.dbConn.Migrator().HasTable(tableName)
+}
+
+func (m *Mysql) WithContext(ctx context.Context) db.Service {
+	return &Mysql{dbConn: m.dbConn.WithContext(ctx), mysqlConfig: m.mysqlConfig}
 }
 
 func (m *Mysql) Preload(query string, args ...interface{}) db.Service {
@@ -158,7 +163,7 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 		if ok {
 			_func_name = runtime.FuncForPC(pc).Name()
 		}
-		logger.Log.Errorf("方法 %s 执行查询表数据, 查询逻辑可以获取%d条记录，但是程序只需要一条记录",
+		gologger.Log.Errorf("方法 %s 执行查询表数据, 查询逻辑可以获取%d条记录，但是程序只需要一条记录",
 			_func_name, row)
 		return false, object.SelectOverOneError
 	}
@@ -189,7 +194,7 @@ func checkInput(input interface{}, kinds ...reflect.Kind) error {
 			funcFile = pc2_file
 			funcLine = pc2_line
 		}
-		logger.Log.WithField("function", funcName).WithField("callerFile", funcFile).
+		gologger.Log.WithField("function", funcName).WithField("callerFile", funcFile).
 			WithField("callerLine", funcLine).Errorf("方法 %s 执行 %s , 传入的对象(%s)不合法(*%s)",
 			funcName, optionName, reflect.ValueOf(input).String(), printKinds(kinds))
 		return object.InputError
@@ -216,7 +221,7 @@ func printKinds(kindSlice []reflect.Kind) (kind string) {
 // affectedRowsIsError Determine whether the number of rows affected by database operations is as expected
 func affectedRowsIsError(num, right int64) error {
 	if right != -1 && num != right {
-		logger.Log.Errorf("添加用户存在异常，数据库发生%d条记录的修改，不是期望的%d", num, right)
+		gologger.Log.Errorf("添加用户存在异常，数据库发生%d条记录的修改，不是期望的%d", num, right)
 		return object.AffectedRowsError
 	}
 	return nil

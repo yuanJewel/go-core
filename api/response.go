@@ -29,18 +29,21 @@ type AuthenticationResponse struct {
 }
 
 func ResponseInit(ctx iris.Context) (response *Response) {
-	traceId := getTraceId(ctx)
-	response = &Response{TraceId: traceId}
-	return
-}
-
-func getTraceId(ctx iris.Context) string {
 	req := ctx.Request()
 	headers := req.Header
 	traceId := headers.Get("traceId")
 	if traceId == "" {
 		traceId = uuid.New().String()
 		headers.Set("traceId", traceId)
+	}
+	response = &Response{TraceId: traceId}
+	return
+}
+
+func GetTraceId(ctx iris.Context) string {
+	traceId := ctx.Request().Header.Get("traceId")
+	if traceId == "" {
+		traceId = "-"
 	}
 	return traceId
 }

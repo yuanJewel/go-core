@@ -8,7 +8,6 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/context"
 	"github.com/kataras/iris/v12/middleware/jwt"
-	"github.com/yuanJewel/go-core/logger"
 	"net/http"
 	"strings"
 	"time"
@@ -116,7 +115,7 @@ func ParseToken(ctx iris.Context) (string, float64, float64, error) {
 func GetUserName(ctx iris.Context) string {
 	user, _, _, err := ParseToken(ctx)
 	if err != nil {
-		logger.Log.Warningln(err)
+		Logger(ctx).Warningln(err)
 		return "unknown"
 	}
 	return user

@@ -28,7 +28,8 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionLine = 0
 		user         object.User
 		username     = api.GetUserName(ctx)
-		tranceId     = ctx.Request().Header.Get("traceId")
+		instance     = Instance.WithContext(ctx)
+		tranceId     = api.GetTraceId(ctx)
 	)
 
 	pc, pcFile, pcLine, ok := runtime.Caller(1)
@@ -37,24 +38,27 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionFile = pcFile
 		functionLine = pcLine
 	}
-	userExist, err := Instance.GetItem(object.User{Name: username}, &user)
+	userExist, err := instance.GetItem(object.User{Name: username}, &user)
 	if err != nil {
-		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+		logger.Log.Logger.WithField("traceId", tranceId).WithField("function", functionName).
+			WithField("callerFile", functionFile).
 			WithField("callerLine", functionLine).Errorln(err)
 		return
 	}
 	if !userExist {
-		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+		logger.Log.Logger.WithField("traceId", tranceId).WithField("function", functionName).
+			WithField("callerFile", functionFile).
 			WithField("callerLine", functionLine).Errorf("cannot find user %s", username)
 		return
 	}
 	_body, err := json.Marshal(&body)
 	if err != nil {
-		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
+		logger.Log.Logger.WithField("traceId", tranceId).WithField("function", functionName).
+			WithField("callerFile", functionFile).
 			WithField("callerLine", functionLine).Errorf("cannot get body: %v", body)
 	}
 
-	if _, err := Instance.AddItem(&object.AssetRecord{
+	if _, err := instance.AddItem(&object.AssetRecord{
 		TranceId:     tranceId,
 		UpdateTime:   time.Now(),
 		UpdateUserId: user.ID,
@@ -63,12 +67,12 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		Body:         string(_body),
 		Context:      context,
 	}, 1); err != nil {
-		logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
-			WithField("callerLine", functionLine).Errorln(err)
+		logger.Log.Logger.WithField("traceId", tranceId).WithField("function", functionName).
+			WithField("callerFile", functionFile).WithField("callerLine", functionLine).Errorln(err)
 	}
 
-	entry := logger.Log.Logger.WithField("function", functionName).WithField("callerFile", functionFile).
-		WithField("callerLine", functionLine)
+	entry := logger.Log.Logger.WithField("traceId", tranceId).WithField("function", functionName).
+		WithField("callerFile", functionFile).WithField("callerLine", functionLine)
 	AffectedTable(entry, ctx, user.ID, dbs...)
 }
 
@@ -80,7 +84,8 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 	var (
 		changeTable = make([]object.TableAffect, 0)
 		actionList  = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
-		tranceId    = ctx.Request().Header.Get("traceId")
+		instance    = Instance.WithContext(ctx)
+		tranceId    = api.GetTraceId(ctx)
 	)
 
 	for _, d := range dbs {
@@ -91,7 +96,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 			primaryIds     = readModel(d.Statement.Model)
 		)
 
-		if !Instance.HasTable(table) {
+		if !instance.HasTable(table) {
 			entry.Errorf("cannot find table %s", table)
 		}
 		for _action := range d.Statement.Clauses {
@@ -116,7 +121,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 		}
 	}
 	if len(changeTable) > 0 {
-		if _, err := Instance.AddItem(&changeTable, int64(len(changeTable))); err != nil {
+		if _, err := instance.AddItem(&changeTable, int64(len(changeTable))); err != nil {
 			entry.Errorln(err)
 		}
 	}

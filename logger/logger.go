@@ -16,7 +16,6 @@ var (
 )
 
 func init() {
-
 	Log.Logger.SetReportCaller(true)
 	Log.Logger.SetLevel(loglevel())
 	Log.Logger.SetFormatter(&logrus.JSONFormatter{

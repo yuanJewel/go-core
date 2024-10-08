@@ -10,7 +10,8 @@ import (
 
 // @Summary 获取项目信息
 // @Description 获取项目信息
-// @Param id header string true "project"
+// @Param id query string false "project"
+// @Param id header string false "project"
 // @Param page header string false "page"
 // @Param body body db.ProjectInfo false "Info"
 // @tags project
@@ -50,7 +51,8 @@ func postProjects(ctx iris.Context) {
 
 // @Summary 修改项目信息
 // @Description 修改项目信息
-// @Param id header string true "project"
+// @Param id query string false "project"
+// @Param id header string false "project"
 // @Param body body db.ProjectInfo true "Info"
 // @tags project
 // @Accept json
@@ -67,7 +69,8 @@ func putProject(ctx iris.Context) {
 
 // @Summary 删除项目信息
 // @Description 删除项目信息
-// @Param id header string true "project"
+// @Param id query string false "project"
+// @Param id header string false "project"
 // @tags project
 // @Accept json
 // @Produce json

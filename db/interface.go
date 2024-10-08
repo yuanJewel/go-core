@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +13,7 @@ type Service interface {
 	HasTable(string) bool
 
 	// Query operations
+	WithContext(ctx context.Context) Service
 	Preload(string, ...interface{}) Service
 	Joins(string, ...interface{}) Service
 	Where(string, ...interface{}) Service

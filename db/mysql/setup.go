@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"github.com/yuanJewel/go-core/db/object"
-	"github.com/yuanJewel/go-core/logger"
+	gologger "github.com/yuanJewel/go-core/logger"
 	"reflect"
 )
 
@@ -13,7 +13,7 @@ func (m *Mysql) Setup(models []interface{}) error {
 	models = append(models, []interface{}{
 		&object.AssetRecord{}, &object.TableAffect{}, &object.User{},
 	}...)
-	defer logger.Log.Infof("成功更新数据库，当前库中存在 %d 个数据表", len(models))
+	defer gologger.Log.Infof("成功更新数据库，当前库中存在 %d 个数据表", len(models))
 
 	err := m.dbConn.AutoMigrate(models...)
 	if err != nil {
@@ -28,7 +28,7 @@ func (m *Mysql) Setup(models []interface{}) error {
 				for i := 0; i < _db.NumField(); i++ {
 					_columnname := _db.Field(i).Name
 					if !m.dbConn.Migrator().HasColumn(modle, _columnname) {
-						logger.Log.Infof("修改表 %s 新增字段 %s", _db.Name(), _columnname)
+						gologger.Log.Infof("修改表 %s 新增字段 %s", _db.Name(), _columnname)
 						if err := m.dbConn.Migrator().AddColumn(modle, _columnname); err != nil {
 							return err
 						}
@@ -43,7 +43,7 @@ func (m *Mysql) Setup(models []interface{}) error {
 		// gorm/schema/naming.go Line: 38, Func: TableName
 		// The created table name may add an 's' ending
 		for _, _notExistTable := range notExistTables {
-			logger.Log.Infof("新增表 %s", reflect.TypeOf(_notExistTable).Name())
+			gologger.Log.Infof("新增表 %s", reflect.TypeOf(_notExistTable).Name())
 		}
 		err := m.dbConn.Migrator().CreateTable(notExistTables...)
 		if err == nil {
