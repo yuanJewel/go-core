@@ -1,8 +1,11 @@
 package config
 
 type Server struct {
-	Port    int  `default:"8080" yaml:"port" env:"server.port"`
-	Swagger bool `default:"true" yaml:"swagger" env:"server.swagger"`
+	Port              int    `default:"8080" yaml:"port" env:"server.port"`
+	Swagger           bool   `default:"true" yaml:"swagger" env:"server.swagger"`
+	HttpTimeout       int    `default:"10" yaml:"httpTimeout" env:"server.httpTimeout"`
+	LogLevel          string `default:"info" yaml:"logLevel" env:"server.logLevel"`
+	DisableStartupLog bool   `default:"true" yaml:"disableStartupLog" env:"server.disableStartupLog"`
 }
 
 type Auth struct {

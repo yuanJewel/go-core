@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/iris-contrib/swagger/v12"
@@ -12,6 +13,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/yuanJewel/go-core/logger"
 	"log"
+	"strconv"
 )
 
 type UserClaims struct {
@@ -47,6 +49,15 @@ type Service interface {
 
 func CreateApi(service Service, isSwagger bool) (*iris.Application, func() error) {
 	app := iris.New()
+	if timeoutMesaage, err := json.Marshal(map[string]string{
+		"code":    strconv.Itoa(TimeoutError),
+		"message": "http connect timeout",
+	}); err == nil {
+		app.Configure(iris.WithConfiguration(iris.Configuration{
+			TimeoutMessage: string(timeoutMesaage),
+		}))
+	}
+
 	app.Get("/", func(ctx iris.Context) {
 		_ = ctx.JSON(map[string]string{
 			"version":      version.Version,

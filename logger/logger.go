@@ -16,7 +16,12 @@ var (
 )
 
 func init() {
-	Log.Logger.SetReportCaller(true)
+	if loglevel() > logrus.InfoLevel {
+		Log.Logger.SetReportCaller(true)
+	} else {
+		Log.Logger.SetReportCaller(false)
+	}
+
 	Log.Logger.SetLevel(loglevel())
 	Log.Logger.SetFormatter(&logrus.JSONFormatter{
 		//DisableColors:   true,
@@ -144,4 +149,12 @@ func loglevel() logrus.Level {
 		return l
 	}
 	return logrus.InfoLevel
+}
+
+func PrintLogStatus() {
+	logPath := "stdout"
+	if isLogOutFile() {
+		logPath = getLogRootPath()
+	}
+	Log.Infof("本次服务日志等级为: %s，日志文件位置: %s", loglevel(), logPath)
 }

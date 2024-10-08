@@ -9,10 +9,12 @@ import (
 	"github.com/yuanJewel/go-core/asset"
 	"github.com/yuanJewel/go-core/db/service"
 	_ "github.com/yuanJewel/go-core/docs"
+	"github.com/yuanJewel/go-core/logger"
 	"github.com/yuanJewel/go-core/pkg/api"
 	"github.com/yuanJewel/go-core/pkg/config"
 	"github.com/yuanJewel/go-core/pkg/db"
 	"log"
+	"time"
 )
 
 func init() {
@@ -25,7 +27,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.3.3
+// @version 1.3.4
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -46,6 +48,7 @@ func main() {
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
+	logger.PrintLogStatus()
 	if err := config.LoadConfig(*configPath); err != nil {
 		log.Fatal("Load Config Error...", err)
 	}
@@ -63,11 +66,16 @@ func main() {
 	}
 
 	app, _close := apiInterface.CreateApi(api.Object{}, config.GlobalConfig.Swagger)
-
+	app.Configure(iris.WithConfiguration(iris.Configuration{
+		Timeout:           time.Duration(config.GlobalConfig.HttpTimeout) * time.Second,
+		LogLevel:          config.GlobalConfig.LogLevel,
+		DisableStartupLog: config.GlobalConfig.DisableStartupLog,
+	}))
 	defer func() {
 		_ = _close()
 	}()
 
+	logger.Log.Info("服务已运行...")
 	if err := app.Run(iris.Addr(fmt.Sprintf(":%d", config.GlobalConfig.Server.Port))); err != nil {
 		log.Fatal("Start Api Error...")
 	}

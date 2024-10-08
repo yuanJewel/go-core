@@ -12,6 +12,7 @@ const (
 	// data error
 	PermissionDeny     = 1
 	JsonUnmarshalError = 2
+	TimeoutError       = 3
 
 	// http error
 	ParseTokenEorror = 11

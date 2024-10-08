@@ -60,6 +60,6 @@ func GetMysqlInstance(cfgData *config.DataSourceDetail) (*Mysql, error) {
 	// Set the maximum time that a connection can be reused.
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	gologger.Log.Infof("连接数据库 %s ，空闲连接数 %d ， 最大连接数 %d", cfgData.Host, cfgData.IdleConnections, cfgData.MaxConnections)
+	gologger.Log.Infof("连接数据库 %s, 空闲连接数 %d, 最大连接数 %d", cfgData.Host, cfgData.IdleConnections, cfgData.MaxConnections)
 	return mysqlInstance, nil
 }
