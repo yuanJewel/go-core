@@ -72,7 +72,7 @@ func NewRequestLogger(dot func(...interface{})) (h iris.Handler, close func() er
 		MessageHeaderKeys: []string{"User-Agent", "traceId"},
 	}
 
-	if isLogOutFile() {
+	if isAccessLogOutFile() {
 		logFile = newLogFile()
 		close = func() error {
 			err := logFile.Close()
@@ -143,6 +143,9 @@ func GetTraceId(ctx iris.Context) string {
 }
 
 func rollingAccessLog() {
+	if !isAccessLogOutFile() {
+		return
+	}
 	c := cron.New()
 	if err := c.AddFunc("0 0 0 * * *", rollAccess); err != nil {
 		fmt.Println("定期清理任务启动失败，", err)
@@ -171,6 +174,14 @@ func rollAccess() {
 			}
 		}
 	}
+}
+
+func isAccessLogOutFile() bool {
+	style := os.Getenv("LOGGER_ACCESS_OUT_STYLE")
+	if style != "stdout" {
+		return true
+	}
+	return false
 }
 
 func getAccessLogs() ([]string, error) {

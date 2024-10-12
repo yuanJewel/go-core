@@ -27,7 +27,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.3.4
+// @version 1.3.5
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 

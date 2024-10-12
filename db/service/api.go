@@ -67,9 +67,10 @@ func GetDbInfoByIdsAndOrder(ctx iris.Context, search, object interface{}, order 
 }
 
 // GetDbInfo 根据ids获取数据
-// 会从header中获取两个字段，id和page
-// id为检索条件，为空默认为*，检索所有
-// page为分页好，为空默认为1
+// 会从header中获取三个字段，id、page、search
+// header id为检索条件，为空默认为*，检索所有
+// header page为分页号，为空默认为1
+// header match 为模糊搜索的条件，默认为空
 // search 搜索条件 必须是在db中定义的struct对象
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 // key 作为需要新增检索的header字段
@@ -102,13 +103,30 @@ func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []stri
 		return
 	}
 
+	matches := GetParams(ctx, "match")
+	var matchSlice map[string]interface{}
+	if err = json.Unmarshal([]byte(matches), &matchSlice); err == nil {
+		for k, v := range matchSlice {
+			if v == "" {
+				continue
+			}
+			switch v.(type) {
+			case int:
+				instance = instance.Where(fmt.Sprintf("%s = ?", k), v)
+			case string:
+				instance = instance.Where(fmt.Sprintf("%s Like ?", k), fmt.Sprintf("%%%s%%", v))
+			}
+		}
+	}
+
 	nums, err := instance.OffsetPages(page-1).GetItems(search, object)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
 	}
+	response.Pages = int(nums)
 	ctx.Header("page", strconv.Itoa(page))
-	ctx.Header("total-pages", strconv.FormatInt(nums, 16))
+	ctx.Header("total-pages", strconv.Itoa(int(nums)))
 	api.ResponseBody(ctx, response, object)
 }
 

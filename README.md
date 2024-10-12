@@ -35,6 +35,18 @@ make run    # 运行任务
     └── index.html
 ```
 
+### 环境变量
+
+`RECORD_DATA`: 是否开启数据记录，默认为true
+`CHECK_TABLE_EXISTS`: 是否检查表是否存在，(需要数据库高级权限)，默认为false
+`LOGGER_RETAIN_NUMBER`: 日志文件保留个数，默认为3
+`LOGGER_FILE_SIZE`: 日志文件最大大小，默认为50M
+`LOGGER_ROOT_PATH`: 日志文件存放位置，默认为`./logs`
+`LOGGER_OUT_STYLE`: 日志输出方式，默认为`file`，可以选择`stdout`不输出到文件
+`LOGGER_ACCESS_OUT_STYLE`: api访问日志输出格式，默认为`file`，可以选择`stdout`不输出到文件
+`LOGGER_OUT_LEVEL`: 日志输出级别，默认为`info`
+
+
 ### 配置基础格式
 
 ```yaml

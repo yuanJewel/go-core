@@ -104,7 +104,7 @@ func GetLogFilename() string {
 
 func getLoggerRetainNumber() int {
 	retainNumber := 3
-	envNumber := os.Getenv("LoggerRetainNumber")
+	envNumber := os.Getenv("LOGGER_RETAIN_NUMBER")
 	if envNumber != "" {
 		if n, err := strconv.Atoi(envNumber); err == nil {
 			retainNumber = n
@@ -115,7 +115,7 @@ func getLoggerRetainNumber() int {
 
 func getLogFileSize() int64 {
 	var size int64 = 50
-	_size := os.Getenv("LoggerFileSize")
+	_size := os.Getenv("LOGGER_FILE_SIZE")
 	if _size != "" {
 		if n, err := strconv.ParseInt(_size, 10, 64); err != nil {
 			size = n

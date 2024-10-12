@@ -28,7 +28,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionLine = 0
 		user         object.User
 		username     = api.GetUserName(ctx)
-		instance     = Instance.WithContext(ctx)
+		instance     = Instance
 		tranceId     = api.GetTraceId(ctx)
 	)
 
@@ -84,7 +84,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 	var (
 		changeTable = make([]object.TableAffect, 0)
 		actionList  = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
-		instance    = Instance.WithContext(ctx)
+		instance    = Instance
 		tranceId    = api.GetTraceId(ctx)
 	)
 
@@ -96,7 +96,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 			primaryIds     = readModel(d.Statement.Model)
 		)
 
-		if !instance.HasTable(table) {
+		if isCheckTableExists() && !instance.HasTable(table) {
 			entry.Errorf("cannot find table %s", table)
 		}
 		for _action := range d.Statement.Clauses {
@@ -164,4 +164,12 @@ func isRecordData() bool {
 		return true
 	}
 	return false
+}
+
+func isCheckTableExists() bool {
+	style := os.Getenv("CHECK_TABLE_EXISTS")
+	if style != "true" {
+		return false
+	}
+	return true
 }

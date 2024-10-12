@@ -15,6 +15,7 @@ type Response struct {
 	Code    int         `json:"code,omitempty"`
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
+	Pages   int         `json:"pages,omitempty"`
 }
 
 // AuthenticationData 鉴权组件返回的Data的内容格式
