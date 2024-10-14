@@ -46,7 +46,6 @@ make run    # 运行任务
 `LOGGER_ACCESS_OUT_STYLE`: api访问日志输出格式，默认为`file`，可以选择`stdout`不输出到文件
 `LOGGER_OUT_LEVEL`: 日志输出级别，默认为`info`
 
-
 ### 配置基础格式
 
 ```yaml
@@ -65,11 +64,11 @@ auth:
 db:
   # 目前只支持mysql
   driver: mysql
-  host: 
+  host:
   port: 3306
-  db: 
-  user: 
-  password: 
+  db:
+  user:
+  password:
   charset: utf8
   idle_connections: 2
   max_connections: 10
@@ -84,6 +83,7 @@ db:
 ### db
 
 目录 `db` 中声明包括数据库目录
+
 - `object` 数据库的数据结构
 - `service` 数据库接口
 - `mysql` 数据库具体方法
@@ -91,3 +91,11 @@ db:
 ### 日志
 
 目录 `logger` 中声明，引用logrus库实现日志的基本功能
+
+## 声明
+
+引用或商用请注明出处，详细授权使用声明请查看: [LICENSE](https://github.com/yuanJewel/go-core/blob/main/LICENSE)
+
+大版本间隔可能会存在不兼容情况，更新迭代，请自行评估。
+
+如果有扩展需求或使用问题，请提交issue，或者邮件联系作者：`luyu151111@163.com`
