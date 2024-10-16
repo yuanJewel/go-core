@@ -1,5 +1,29 @@
 # go-core
 
+本库中封装了常用功能，方便快速开发。推荐go项目引用本项目，快速实现安全的crud，可以根据需求保存审计信息等。
+
+已实现的特性：
+
+- 数据库模块封装
+  - 目前支持mysql，未来会支持其他数据库
+  - 支持表不存在时自动创建表。
+  - 支持数据记录，支持数据加密，支持数据校验。
+  - 支持数据权限控制，支持数据审计。
+  - 支持数据导出，支持数据导入。
+  - 支持数据分页，支持数据排序，支持数据搜索。
+  - 支持操作预期和事务控制，保障数据安全。
+- api接口模块封装
+  - 支持jwt认证，并可以刷新认证信息。
+  - 支持数据传输标准化，包括输入输出的格式和数据校验。
+  - 支持微服务架构的安全和鉴权。
+  - 支持快速和数据库建立crud接口群。
+- 日志模块封装
+  - 统一所有日志输出方式，支持输出到文件，支持输出到控制台。
+  - 支持日志文件自动切割，滚动迭代，按日期归档。
+  - 数据库、api日志都可以定义和配置，包括debug级别的日志。
+- 配置模块封装
+  - 支持yaml和json两种格式，支持环境变量覆盖。
+
 ## 使用方法
 
 ### 直接运行Demo
@@ -37,14 +61,14 @@ make run    # 运行任务
 
 ### 环境变量
 
-`RECORD_DATA`: 是否开启数据记录，默认为true
-`CHECK_TABLE_EXISTS`: 是否检查表是否存在，(需要数据库高级权限)，默认为false
-`LOGGER_RETAIN_NUMBER`: 日志文件保留个数，默认为3
-`LOGGER_FILE_SIZE`: 日志文件最大大小，默认为50M
-`LOGGER_ROOT_PATH`: 日志文件存放位置，默认为`./logs`
-`LOGGER_OUT_STYLE`: 日志输出方式，默认为`file`，可以选择`stdout`不输出到文件
-`LOGGER_ACCESS_OUT_STYLE`: api访问日志输出格式，默认为`file`，可以选择`stdout`不输出到文件
-`LOGGER_OUT_LEVEL`: 日志输出级别，默认为`info`
+- `RECORD_DATA`: 是否开启数据记录，默认为true
+- `CHECK_TABLE_EXISTS`: 是否检查表是否存在，(需要数据库高级权限)，默认为false
+- `LOGGER_RETAIN_NUMBER`: 日志文件保留个数，默认为3
+- `LOGGER_FILE_SIZE`: 日志文件最大大小，默认为50M
+- `LOGGER_ROOT_PATH`: 日志文件存放位置，默认为`./logs`
+- `LOGGER_OUT_STYLE`: 日志输出方式，默认为`file`，可以选择`stdout`不输出到文件
+- `LOGGER_ACCESS_OUT_STYLE`: api访问日志输出格式，默认为`file`，可以选择`stdout`不输出到文件
+- `LOGGER_OUT_LEVEL`: 日志输出级别，默认为`info`
 
 ### 配置基础格式
 
