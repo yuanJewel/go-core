@@ -84,7 +84,7 @@ func (m *Mysql) Limit(limit int) db.Service {
 }
 
 // AddItem input must be an interface type
-func (m *Mysql) AddItem(item interface{}, affectRows int64) (*gorm.DB, error) {
+func (m *Mysql) AddItem(item interface{}, affectRows ...int64) (*gorm.DB, error) {
 	if err := checkInput(item, reflect.Struct, reflect.Slice); err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (m *Mysql) AddItem(item interface{}, affectRows int64) (*gorm.DB, error) {
 	if result.Error != nil {
 		return result, result.Error
 	}
-	if err := affectedRowsIsError(result.RowsAffected, affectRows); result.Error == nil && err != nil {
+	if err := affectedRowsIsError(result.RowsAffected, affectRows...); result.Error == nil && err != nil {
 		transaction.Rollback()
 		return result, err
 	}
@@ -101,7 +101,7 @@ func (m *Mysql) AddItem(item interface{}, affectRows int64) (*gorm.DB, error) {
 }
 
 // UpdateItem input new must be an interface type
-func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows int64) (*gorm.DB, error) {
+func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows ...int64) (*gorm.DB, error) {
 	if err := checkInput(new, reflect.Struct); err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows int64) (
 	if result.Error != nil {
 		return result, result.Error
 	}
-	if err := affectedRowsIsError(result.RowsAffected, affectRows); result.Error == nil && err != nil {
+	if err := affectedRowsIsError(result.RowsAffected, affectRows...); result.Error == nil && err != nil {
 		transaction.Rollback()
 		return result, err
 	}
@@ -118,7 +118,7 @@ func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows int64) (
 }
 
 // DeleteItem input must be an interface type
-func (m *Mysql) DeleteItem(item interface{}, affectRows int64) (*gorm.DB, error) {
+func (m *Mysql) DeleteItem(item interface{}, affectRows ...int64) (*gorm.DB, error) {
 	if err := checkInput(item, reflect.Struct, reflect.Slice); err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (m *Mysql) DeleteItem(item interface{}, affectRows int64) (*gorm.DB, error)
 	if result.Error != nil {
 		return result, result.Error
 	}
-	if err := affectedRowsIsError(result.RowsAffected, affectRows); result.Error == nil && err != nil {
+	if err := affectedRowsIsError(result.RowsAffected, affectRows...); result.Error == nil && err != nil {
 		transaction.Rollback()
 		return result, err
 	}
@@ -219,10 +219,15 @@ func printKinds(kindSlice []reflect.Kind) (kind string) {
 }
 
 // affectedRowsIsError Determine whether the number of rows affected by database operations is as expected
-func affectedRowsIsError(num, right int64) error {
-	if right != -1 && num != right {
-		gologger.Log.Errorf("添加用户存在异常，数据库发生%d条记录的修改，不是期望的%d", num, right)
-		return object.AffectedRowsError
+func affectedRowsIsError(num int64, right ...int64) error {
+	if len(right) == 1 && right[0] == -1 {
+		return nil
 	}
-	return nil
+	for _, r := range right {
+		if num == r {
+			return nil
+		}
+	}
+	gologger.Log.Errorf("添加用户存在异常，数据库发生%d条记录的修改，不是期望的%d", num, right)
+	return object.AffectedRowsError
 }

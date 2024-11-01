@@ -23,9 +23,9 @@ type Service interface {
 	OffsetPages(page int) Service
 
 	// General operations for manipulating databases
-	AddItem(interface{}, int64) (*gorm.DB, error)
-	UpdateItem(interface{}, interface{}, int64) (*gorm.DB, error)
-	DeleteItem(interface{}, int64) (*gorm.DB, error)
+	AddItem(interface{}, ...int64) (*gorm.DB, error)
+	UpdateItem(interface{}, interface{}, ...int64) (*gorm.DB, error)
+	DeleteItem(interface{}, ...int64) (*gorm.DB, error)
 	GetItems(interface{}, interface{}) (int64, error)
 	GetItem(interface{}, interface{}) (bool, error)
 }

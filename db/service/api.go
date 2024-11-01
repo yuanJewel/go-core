@@ -235,7 +235,7 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 		api.ReturnErr(api.ReflectError, ctx, err, response)
 		return
 	}
-	result, err := instance.UpdateItem(map[string]string{"id": id}, object, 1)
+	result, err := instance.UpdateItem(map[string]string{"id": id}, object, 0, 1)
 	if err != nil {
 		api.ReturnErr(api.UpdateDbError, ctx, err, response)
 		return

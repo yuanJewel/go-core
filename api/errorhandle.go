@@ -28,30 +28,24 @@ const (
 	ParseHeaderError    = 35
 	GoogleCodeError     = 36
 
-	// task error
-	InitWorkerError  = 41
-	StartWorkerError = 42
-	GetWorkerError   = 43
-
 	// connect other components error
-	ConnectAuthenticationError = 101
-	ConnectAssetRecordError    = 102
-	ConnectTaskWorkerError     = 102
+	ConnectAuthenticationError = 41
+	ConnectTaskWorkerError     = 42
 
 	// DB connnect error
-	SelectDbError = 301
-	AddDbError    = 302
-	UpdateDbError = 303
-	DeleteDbError = 304
+	SelectDbError = 51
+	AddDbError    = 52
+	UpdateDbError = 53
+	DeleteDbError = 54
 
 	// Redis connect error
-	ConnectRedisError = 401
-	SelectRedisError  = 402
+	ConnectRedisError = 61
+	SelectRedisError  = 62
 
 	// reflect error
-	ReflectError           = 501
-	UnmarshalResponseError = 502
-	SpecialReturnError     = 503
+	ReflectError           = 71
+	UnmarshalResponseError = 72
+	SpecialReturnError     = 73
 )
 
 func ReturnErr(code int, ctx iris.Context, err error, response *Response) {
