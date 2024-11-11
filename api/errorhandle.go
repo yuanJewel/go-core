@@ -46,6 +46,11 @@ const (
 	ReflectError           = 71
 	UnmarshalResponseError = 72
 	SpecialReturnError     = 73
+
+	// task error
+	CreateTaskError     = 81
+	GetTaskBodyError    = 82
+	CannotFindTaskError = 83
 )
 
 func ReturnErr(code int, ctx iris.Context, err error, response *Response) {

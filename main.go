@@ -13,6 +13,8 @@ import (
 	"github.com/yuanJewel/go-core/pkg/api"
 	"github.com/yuanJewel/go-core/pkg/config"
 	"github.com/yuanJewel/go-core/pkg/db"
+	taskPkg "github.com/yuanJewel/go-core/pkg/task"
+	"github.com/yuanJewel/go-core/task"
 	"log"
 	"time"
 )
@@ -27,7 +29,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.3.7
+// @version 1.4.1
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -75,6 +77,12 @@ func main() {
 		_ = _close()
 	}()
 
+	// 初始化任务服务，如果业务不需要可以做相应调整
+	if err := task.InitWork(config.GlobalConfig.Redis, config.GlobalConfig.Task, taskPkg.RegisteredTask); err != nil {
+		log.Fatal("Start Work Error...", err)
+	}
+
+	// 启动api server服务
 	logger.Log.Info("服务已运行...")
 	if err := app.Run(iris.Addr(fmt.Sprintf(":%d", config.GlobalConfig.Server.Port))); err != nil {
 		log.Fatal("Start Api Error...")

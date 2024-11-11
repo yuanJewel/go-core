@@ -34,6 +34,8 @@ type Service interface {
 	GetAuth() string
 	// GetAuthenticateUrl 传入Authenticate组件地址
 	GetAuthenticateUrl() string
+	// Webhook 自定义路由逻辑
+	Webhook(iris.Party)
 	// Party 自定义路由逻辑
 	Party(iris.Party)
 	// Health 定义健康检查接口需要检查的内容
@@ -111,6 +113,9 @@ func CreateApi(service Service, isSwagger bool) (*iris.Application, func() error
 	// 权限管理
 	app.Post("/authenticate", service.AuthenticateApi).Name = "post_authenticate"
 
+	// webhook 免认证
+	service.Webhook(app.Party("/webhook"))
+
 	// 增加token 验证
 	Auth = service.GetAuth()
 	AuthenticateUrl = service.GetAuthenticateUrl()
@@ -130,6 +135,8 @@ func (Object) GetAuth() string { return "" }
 func (Object) GetAuthenticateUrl() string { return "" }
 
 func (Object) Party(iris.Party) {}
+
+func (Object) Webhook(iris.Party) {}
 
 func (Object) Health() func() map[string]error {
 	return func() map[string]error {
