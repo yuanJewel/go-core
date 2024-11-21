@@ -25,7 +25,9 @@ func testError(id string, data ...interface{}) (string, error) {
 }
 
 func testSuccess(id string, data ...interface{}) (string, error) {
-	s := fmt.Sprintf("task(%s) start in %s, input is %v", id, time.Now().String(), data)
+	s := fmt.Sprintf("task(%s) start in %s, input is %v, variable is %s", id, time.Now().String(),
+		data, task.GetVariable(id, "test"))
+	task.AppendVariable(id, "test", fmt.Sprintf("%v", data[0]))
 	fmt.Println("yuanTag " + s)
 	time.Sleep(3 * time.Second)
 	return s, nil

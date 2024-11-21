@@ -33,7 +33,7 @@ func LockTaskState(id string) error {
 		logger.Log.Debugf("task(%s) has been locked", id)
 		return LockError(id)
 	}
-	redisInstance.Set(3*time.Hour, lockId, time.Now().String())
+	redisInstance.Set(12*time.Hour, lockId, time.Now().String())
 	return nil
 }
 

@@ -15,6 +15,18 @@ func (s *Store) Ping() error {
 	return s.redisInstance.Ping(ctx).Err()
 }
 
+func (s *Store) Del(key string) {
+	s.Lock()
+	defer s.Unlock()
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+	defer cancel()
+
+	err := s.redisInstance.Del(ctx, key).Err()
+	if err != nil {
+		s.Log().Errorln(err)
+	}
+}
+
 func (s *Store) Set(expiration time.Duration, key string, value interface{}) {
 	s.Lock()
 	defer s.Unlock()
@@ -35,6 +47,10 @@ func (s *Store) Get(key string) ([]byte, error) {
 	defer s.RUnlock()
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
+
+	if ok, err := s.Exists(key); err != nil || !ok {
+		return nil, err
+	}
 
 	value, err := s.redisInstance.Get(ctx, key).Bytes()
 	if err != nil {
