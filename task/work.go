@@ -8,25 +8,29 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/yuanJewel/go-core/db/redis"
 	"github.com/yuanJewel/go-core/logger"
+	"net"
+	"time"
 )
 
 const StateAborted = "ABORTED"
 
 var (
-	MachineryInstance *machinery.Server
+	machineryInstance *machinery.Server
+	redisInstance     *redis.Store
 )
 
-func InitWork(redis redis.Redis, task Task, taskMap map[string]interface{}) (err error) {
+func InitWork(task Task, taskMap map[string]interface{}, f FinishInterface) (err error) {
 	rabbitmq := task.RabbitMq
-	MachineryInstance, err = machinery.NewServer(&config.Config{
+	redisConf := task.Redis
+	machineryInstance, err = machinery.NewServer(&config.Config{
 		Broker:          fmt.Sprintf("amqp://%s:%s@%s:%s", rabbitmq.Username, rabbitmq.Password, rabbitmq.Host, rabbitmq.Port),
 		DefaultQueue:    rabbitmq.Queue,
-		ResultBackend:   fmt.Sprintf("redis://%s@%s:%s/%d", redis.Password, redis.Host, redis.Port, redis.Db),
+		ResultBackend:   fmt.Sprintf("redis://%s@%s:%s/%d", redisConf.Password, redisConf.Host, redisConf.Port, redisConf.Db),
 		ResultsExpireIn: 3600,
 		Redis: &config.RedisConfig{
-			MaxIdle:      redis.PoolSize,
-			ReadTimeout:  redis.Timeout,
-			WriteTimeout: redis.Timeout,
+			MaxIdle:      redisConf.PoolSize,
+			ReadTimeout:  redisConf.Timeout,
+			WriteTimeout: redisConf.Timeout,
 		},
 		AMQP: &config.AMQPConfig{
 			Exchange:      rabbitmq.Exchange,
@@ -39,11 +43,27 @@ func InitWork(redis redis.Redis, task Task, taskMap map[string]interface{}) (err
 		return
 	}
 
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(rabbitmq.Host, rabbitmq.Port), 3*time.Second)
+	if err != nil || conn == nil {
+		return fmt.Errorf("cannot connect rabbitmq(%s:%s), error: %v", rabbitmq.Host, rabbitmq.Port, err)
+	}
+	_ = conn.Close()
+	conn, err = net.DialTimeout("tcp", net.JoinHostPort(redisConf.Host, redisConf.Port), 3*time.Second)
+	if err != nil || conn == nil {
+		return fmt.Errorf("cannot connect redis(%s:%s), error: %v", redisConf.Host, redisConf.Port, err)
+	}
+	_ = conn.Close()
+
+	redisInstance, err = redis.GetRedisInstance(&redisConf)
+	if err != nil {
+		return
+	}
+
 	taskMap["success"] = resultToDb
 	taskMap["error"] = errorToDb
 	taskMap["finish"] = finishTask
 
-	err = MachineryInstance.RegisterTasks(taskMap)
+	err = machineryInstance.RegisterTasks(taskMap)
 	if err != nil {
 		return
 	}
@@ -54,9 +74,10 @@ func InitWork(redis redis.Redis, task Task, taskMap map[string]interface{}) (err
 
 	logger.Log.Infof("Complete task system registration !")
 	if task.IsWorker {
-		worker := MachineryInstance.NewWorker(task.Tag, task.Concurrency)
+		worker := machineryInstance.NewWorker(task.Tag, task.Concurrency)
 		logger.Log.Infof("Start one worker !")
 		worker.LaunchAsync(make(chan error))
 	}
+	finishObject = f
 	return
 }

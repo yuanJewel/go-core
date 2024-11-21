@@ -28,7 +28,6 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionLine = 0
 		user         object.User
 		username     = api.GetUserName(ctx)
-		instance     = Instance
 		tranceId     = api.GetTraceId(ctx)
 	)
 
@@ -38,7 +37,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 		functionFile = pcFile
 		functionLine = pcLine
 	}
-	userExist, err := instance.GetItem(object.User{Name: username}, &user)
+	userExist, err := Instance.GetItem(object.User{Name: username}, &user)
 	if err != nil {
 		logger.Log.Logger.WithField("traceId", tranceId).WithField("function", functionName).
 			WithField("callerFile", functionFile).
@@ -58,7 +57,7 @@ func InsertAssetRecordItem(ctx iris.Context, body interface{}, context string, d
 			WithField("callerLine", functionLine).Errorf("cannot get body: %v", body)
 	}
 
-	if _, err := instance.AddItem(&object.AssetRecord{
+	if _, err := Instance.AddItem(&object.AssetRecord{
 		TranceId:     tranceId,
 		UpdateTime:   time.Now(),
 		UpdateUserId: user.ID,
@@ -84,7 +83,6 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 	var (
 		changeTable = make([]object.TableAffect, 0)
 		actionList  = []string{"INSERT", "SELECT", "UPDATE", "DELETE"}
-		instance    = Instance
 		tranceId    = api.GetTraceId(ctx)
 	)
 
@@ -96,7 +94,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 			primaryIds     = readModel(d.Statement.Model)
 		)
 
-		if isCheckTableExists() && !instance.HasTable(table) {
+		if isCheckTableExists() && !Instance.HasTable(table) {
 			entry.Errorf("cannot find table %s", table)
 		}
 		for _action := range d.Statement.Clauses {
@@ -121,7 +119,7 @@ func AffectedTable(entry *logrus.Entry, ctx iris.Context, userId int, dbs ...gor
 		}
 	}
 	if len(changeTable) > 0 {
-		if _, err := instance.AddItem(&changeTable, int64(len(changeTable))); err != nil {
+		if _, err := Instance.AddItem(&changeTable, int64(len(changeTable))); err != nil {
 			entry.Errorln(err)
 		}
 	}

@@ -2,12 +2,18 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"github.com/yuanJewel/go-core/logger"
 	"runtime"
 	"time"
 )
+
+func (s *Store) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+	defer cancel()
+
+	return s.redisInstance.Ping(ctx).Err()
+}
 
 func (s *Store) Set(expiration time.Duration, key string, value interface{}) {
 	s.Lock()
@@ -18,12 +24,7 @@ func (s *Store) Set(expiration time.Duration, key string, value interface{}) {
 	if expiration < 0 {
 		expiration = s.expiration
 	}
-	data, err := json.Marshal(value)
-	if err != nil {
-		s.Log().Warningln(err)
-		return
-	}
-	err = s.redisInstance.Set(ctx, key, data, expiration).Err()
+	err := s.redisInstance.Set(ctx, key, value, expiration).Err()
 	if err != nil {
 		s.Log().Errorln(err)
 	}
@@ -41,6 +42,20 @@ func (s *Store) Get(key string) ([]byte, error) {
 		return nil, err
 	}
 	return value, nil
+}
+
+func (s *Store) Exists(key string) (bool, error) {
+	s.RLock()
+	defer s.RUnlock()
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+	defer cancel()
+
+	value, err := s.redisInstance.Exists(ctx, key).Result()
+	if err != nil {
+		s.Log().Warningln(err)
+		return false, err
+	}
+	return value == 1, nil
 }
 
 func (s *Store) Keys(prefix string) ([]string, error) {

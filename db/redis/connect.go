@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
-func GetRedisInstance(cfg Redis) (*Store, error) {
-	if Instance != nil {
-		return Instance, nil
-	}
-	Instance = &Store{
+func InitRedis(cfg *Redis) (err error) {
+	Instance, err = GetRedisInstance(cfg)
+	return
+}
+
+func GetRedisInstance(cfg *Redis) (*Store, error) {
+	instance := &Store{
 		redisInstance: redis.NewClient(&redis.Options{
 			Addr:         fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 			Password:     cfg.Password,
@@ -26,13 +28,13 @@ func GetRedisInstance(cfg Redis) (*Store, error) {
 		timeout:    time.Duration(cfg.Timeout) * time.Second,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), Instance.expiration)
+	ctx, cancel := context.WithTimeout(context.Background(), instance.expiration)
 	defer cancel()
 
-	_, err := Instance.redisInstance.Ping(ctx).Result()
+	_, err := instance.redisInstance.Ping(ctx).Result()
 	if err != nil {
 		logger.Log.Errorf("cannot connect redis(%s:%s), error: %v", cfg.Host, cfg.Port, err)
 		return nil, err
 	}
-	return Instance, nil
+	return instance, nil
 }

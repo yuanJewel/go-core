@@ -116,6 +116,12 @@ db:
 
 目录 `logger` 中声明，引用logrus库实现日志的基本功能
 
+### 任务
+
+目录 `task` 中声明，引用machinery库实现任务自定义，可以串行、并行，支持定时任务，支持消息队列，支持分布式任务。
+
+任务中需要用到redis和rabbitmq，为防止产生冲突缓存key出现冲突，自定义相关参数配置，主服务使用的redis和任务系统的redis区分配置。
+
 ## 声明
 
 引用或商用请注明出处，详细授权使用声明请查看: [LICENSE](https://github.com/yuanJewel/go-core/blob/main/LICENSE)

@@ -19,14 +19,6 @@ type responseStruct struct {
 	Data []map[string]interface{} `json:"data,omitempty"`
 }
 
-func GetParams(ctx iris.Context, key string) string {
-	data := ctx.GetHeader(key)
-	if data == "" {
-		data = ctx.URLParam(key)
-	}
-	return data
-}
-
 func initIdsString(ids string) string {
 	returnIds := ids
 	if !strings.HasPrefix(ids, "[") {
@@ -41,7 +33,7 @@ func initIdsString(ids string) string {
 
 func initPageString(ctx iris.Context) int {
 	page := 1
-	pages := GetParams(ctx, "page")
+	pages := api.GetParams(ctx, "page")
 	traceId := api.GetTraceId(ctx)
 	if pages != "" {
 		parsedPage, err := strconv.Atoi(pages)
@@ -81,7 +73,7 @@ func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []stri
 	instance := Instance.WithContext(ctx)
 	for _, key := range keys {
 		if key != "" {
-			keyString := initIdsString(GetParams(ctx, key))
+			keyString := initIdsString(api.GetParams(ctx, key))
 			instance = instance.Search(fmt.Sprintf("%s IN ?", key), keyString)
 		}
 	}
@@ -103,7 +95,7 @@ func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []stri
 		return
 	}
 
-	matches := GetParams(ctx, "match")
+	matches := api.GetParams(ctx, "match")
 	var matchSlice map[string]interface{}
 	if err = json.Unmarshal([]byte(matches), &matchSlice); err == nil {
 		for k, v := range matchSlice {
@@ -191,7 +183,7 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 func PutDbInfoById(ctx iris.Context, path string, object interface{}, special func(*map[string]interface{}) error) {
 	response := api.ResponseInit(ctx)
 	instance := Instance.WithContext(ctx)
-	id := GetParams(ctx, "id")
+	id := api.GetParams(ctx, "id")
 	header := http.Header{}
 	header.Set("id", id)
 	code, reverserBody := api.ReverserInfoUtil(ctx, response, header, api.NilBody, http.MethodGet, path)

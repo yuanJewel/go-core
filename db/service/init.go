@@ -10,21 +10,26 @@ import (
 
 var Instance db.Service
 
-// InitDb Get the cmdb instance, the default is mysql
-func InitDb(cfgData *config.DataSourceDetail) error {
+// InitDb global variables are used to connect to the database by default.
+func InitDb(cfgData *config.DataSourceDetail) (err error) {
+	Instance, err = GetDb(cfgData)
+	return
+}
+
+// GetDb Get the DataBase instance, the default is mysql
+func GetDb(cfgData *config.DataSourceDetail) (instance db.Service, err error) {
 	cmdbDriver := cfgData.Driver
-	var err error
 	switch strings.ToLower(cmdbDriver) {
 	case "oracle":
-		return nil
+		return
 	default:
-		Instance, err = mysql.GetMysqlInstance(cfgData)
+		instance, err = mysql.GetMysqlInstance(cfgData)
 		if err != nil {
-			return err
+			return
 		}
 	}
-	if Instance == nil {
-		return errors.New("config about config cannot find right instance")
+	if instance == nil {
+		return nil, errors.New("config about config cannot find right instance")
 	}
-	return nil
+	return
 }

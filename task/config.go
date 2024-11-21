@@ -1,14 +1,16 @@
 package task
 
 import (
+	"github.com/yuanJewel/go-core/db/redis"
 	"os"
 	"strconv"
 )
 
 type Task struct {
-	Tag         string `required:"true" yaml:"tag" env:"task.tag"`
-	Concurrency int    `default:"10" yaml:"concurrency" env:"task.concurrency"`
-	IsWorker    bool   `default:"false" yaml:"worker" env:"task.worker"`
+	Tag         string      `required:"true" yaml:"tag" env:"task.tag"`
+	Concurrency int         `default:"10" yaml:"concurrency" env:"task.concurrency"`
+	IsWorker    bool        `default:"false" yaml:"worker" env:"task.worker"`
+	Redis       redis.Redis `yaml:"redis"`
 	RabbitMq    `yaml:"mq"`
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/common/version"
 	apiInterface "github.com/yuanJewel/go-core/api"
 	"github.com/yuanJewel/go-core/asset"
+	"github.com/yuanJewel/go-core/db/redis"
 	"github.com/yuanJewel/go-core/db/service"
 	_ "github.com/yuanJewel/go-core/docs"
 	"github.com/yuanJewel/go-core/logger"
@@ -29,7 +30,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.4.1
+// @version 1.4.2
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -59,6 +60,10 @@ func main() {
 		log.Fatal("Init Database Error...", err)
 	}
 
+	if err := redis.InitRedis(&config.GlobalConfig.Redis); err != nil {
+		log.Fatal("Init Database Error...", err)
+	}
+
 	if *initDb {
 		if err := db.SetupCmdb(); err != nil {
 			log.Fatal("Init Database Error...", err)
@@ -67,7 +72,7 @@ func main() {
 		return
 	}
 
-	app, _close := apiInterface.CreateApi(api.Object{}, config.GlobalConfig.Swagger)
+	app, _close := apiInterface.CreateApi(&api.Object{}, config.GlobalConfig.Swagger)
 	app.Configure(iris.WithConfiguration(iris.Configuration{
 		Timeout:           time.Duration(config.GlobalConfig.HttpTimeout) * time.Second,
 		LogLevel:          config.GlobalConfig.LogLevel,
@@ -78,7 +83,8 @@ func main() {
 	}()
 
 	// 初始化任务服务，如果业务不需要可以做相应调整
-	if err := task.InitWork(config.GlobalConfig.Redis, config.GlobalConfig.Task, taskPkg.RegisteredTask); err != nil {
+	if err := task.InitWork(config.GlobalConfig.Task, taskPkg.RegisteredTask,
+		&task.FinishStruct{}); err != nil {
 		log.Fatal("Start Work Error...", err)
 	}
 

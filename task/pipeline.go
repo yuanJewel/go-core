@@ -29,9 +29,11 @@ func createTask(job string, stage int) error {
 			Name: step.Tag,
 			Args: []tasks.Arg{{
 				Type:  "string",
+				Value: step.ID,
+			}, {
+				Type:  "string",
 				Value: step.Option,
 			}},
-			StopTaskDeletionOnError:     true,
 			IgnoreWhenTaskNotRegistered: true,
 			OnSuccess:                   newSignature(step.ID, "success"),
 			OnError:                     newSignature(step.ID, "error"),
@@ -51,7 +53,7 @@ func createTask(job string, stage int) error {
 		return err
 	}
 
-	finishId := fmt.Sprintf("finish-%s", uuid.New().String())
+	finishId := fmt.Sprintf("finish_%s", uuid.New().String())
 	chord, err := tasks.NewChord(group, &tasks.Signature{
 		UUID: finishId,
 		Name: "finish",
@@ -62,12 +64,11 @@ func createTask(job string, stage int) error {
 			Type:  "int",
 			Value: stage,
 		}},
-		StopTaskDeletionOnError:     true,
 		IgnoreWhenTaskNotRegistered: true,
 		RetryCount:                  0,
 		OnSuccess:                   []*tasks.Signature{},
 		OnError: []*tasks.Signature{{
-			UUID: finishId + "-error",
+			UUID: finishId + "_error",
 			Name: "error",
 			Args: []tasks.Arg{
 				{
@@ -75,14 +76,13 @@ func createTask(job string, stage int) error {
 					Value: finishId + "-job-" + job,
 				},
 			},
-			RetryCount:              0,
-			StopTaskDeletionOnError: true,
+			RetryCount: 0,
 		}},
 	})
 	if err != nil {
 		return err
 	}
-	_, err = MachineryInstance.SendChord(chord, maxConcurrency())
+	_, err = machineryInstance.SendChord(chord, maxConcurrency())
 	if err == nil {
 		logger.Log.Debugf("create task(%v) successfully", steps)
 	}
@@ -104,6 +104,7 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 		return fmt.Errorf("job(%s) is not exists", jobId)
 	}
 	if job.State == StateAborted {
+		finishObject.Abort(jobId)
 		return nil
 	}
 
@@ -118,6 +119,7 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 		if err != nil {
 			return err
 		}
+		finishObject.Success(jobId)
 		return nil
 	}
 
@@ -128,7 +130,7 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 
 	for _, s := range steps {
 		if s.State != tasks.StateSuccess {
-			return fmt.Errorf("step(%s) is not success", s.ID)
+			return finishError(jobId)
 		}
 	}
 
@@ -149,7 +151,7 @@ func newSignature(id string, status string) []*tasks.Signature {
 		return nil
 	}
 	return []*tasks.Signature{{
-		UUID: id + "-" + status,
+		UUID: id + "_" + status,
 		Name: status,
 		Args: []tasks.Arg{
 			{
@@ -157,7 +159,6 @@ func newSignature(id string, status string) []*tasks.Signature {
 				Value: id,
 			},
 		},
-		RetryCount:              0,
-		StopTaskDeletionOnError: true,
+		RetryCount: 0,
 	}}
 }

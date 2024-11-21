@@ -13,7 +13,7 @@ import (
 
 func CreateTaskContext(ctx iris.Context) {
 	response := api.ResponseInit(ctx)
-	instance := service.Instance.WithContext(ctx)
+	dbInstance := service.Instance.WithContext(ctx)
 	body, err := ctx.GetBody()
 	if err != nil {
 		api.ReturnErr(api.GetBodyError, ctx, err, response)
@@ -54,7 +54,7 @@ func CreateTaskContext(ctx iris.Context) {
 	}
 
 	for _, step := range bodySteps {
-		if !MachineryInstance.IsTaskRegistered(step.Tag) {
+		if !machineryInstance.IsTaskRegistered(step.Tag) {
 			api.ReturnErr(api.CannotFindTaskError, ctx, fmt.Errorf("cannot find task function: %s", step.Name), response)
 			return
 		}
@@ -80,13 +80,13 @@ func CreateTaskContext(ctx iris.Context) {
 		return
 	}
 
-	_, err = instance.AddItem(&job, 1)
+	_, err = dbInstance.AddItem(&job, 1)
 	if err != nil {
 		api.ReturnErr(api.AddDbError, ctx, err, response)
 		return
 	}
 
-	_, err = instance.AddItem(&steps, int64(len(steps)))
+	_, err = dbInstance.AddItem(&steps, int64(len(steps)))
 	if err != nil {
 		api.ReturnErr(api.AddDbError, ctx, err, response)
 		return

@@ -115,8 +115,11 @@ func ParseToken(ctx iris.Context) (string, float64, float64, error) {
 func GetUserName(ctx iris.Context) string {
 	user, _, _, err := ParseToken(ctx)
 	if err != nil {
+		user = ctx.GetHeader("user")
+		if user == "" {
+			user = "system"
+		}
 		Logger(ctx).Warningln(err)
-		return "unknown"
 	}
 	return user
 }

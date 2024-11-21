@@ -13,7 +13,52 @@ import (
 
 var DesensitizationKeyList = []string{"password", "passwd", "token", "auth"}
 
+func GetRegisteredTaskNames() []string {
+	return machineryInstance.GetRegisteredTaskNames()
+}
+
+func LockError(id string) error {
+	return fmt.Errorf("task-lock-%s", id)
+}
+
+// LockTaskState Non-idempotent tasks require additional protection locks to use this module
+func LockTaskState(id string) error {
+	lockId := fmt.Sprintf("task_%s_lock", id)
+	lock, err := redisInstance.Exists(lockId)
+	if err != nil {
+		logger.Log.Errorf("redis for task is error, please check %v", err)
+		return nil
+	}
+	if lock {
+		logger.Log.Debugf("task(%s) has been locked", id)
+		return LockError(id)
+	}
+	redisInstance.Set(3*time.Hour, lockId, time.Now().String())
+	return nil
+}
+
 func resultToDb(id string, _ ...interface{}) error {
+	task, err := machineryInstance.GetBackend().GetState(id)
+	if err != nil {
+		return err
+	}
+	for _, r := range task.Results {
+		if r.Type == "string" {
+			v, ok := r.Value.(string)
+			if !ok {
+				break
+			}
+			if v == LockError(id).Error() {
+				logger.Log.Warnf("step %s has been locked", id)
+				return nil
+			}
+		}
+	}
+
+	t := LockTaskState(id + "_end")
+	if t != nil {
+		return nil
+	}
 	step := Step{}
 
 	exists, err := service.Instance.GetItem(Step{ID: id}, &step)
@@ -23,14 +68,11 @@ func resultToDb(id string, _ ...interface{}) error {
 	if !exists {
 		return fmt.Errorf("cannot find step: %s", id)
 	}
-	if step.State != tasks.StatePending && step.State != tasks.StateStarted && step.State != "" {
-		return taskRunOverOnce(id)
+	if step.State == tasks.StateSuccess {
+		logger.Log.Errorf("step %s has run over once", id)
+		return nil
 	}
 
-	task, err := MachineryInstance.GetBackend().GetState(id)
-	if err != nil {
-		return err
-	}
 	_, err = service.Instance.UpdateItem(Step{ID: id}, &Step{
 		State:      task.State,
 		Result:     HumanReadableResults(task.Results),
@@ -43,10 +85,16 @@ func resultToDb(id string, _ ...interface{}) error {
 }
 
 func errorToDb(error, id string, _ ...interface{}) error {
+	t := LockTaskState(id + "_end")
+	if t != nil {
+		return nil
+	}
 	step := Step{}
+
 	if strings.HasPrefix(id, "finish-") && strings.Contains(id, "-job-") {
 		idList := strings.Split(id, "-job-")
 		id = idList[0]
+		finishObject.Error(idList[1])
 		_, err := service.Instance.AddItem(&Step{
 			ID:         id,
 			JobId:      idList[1],
@@ -71,10 +119,11 @@ func errorToDb(error, id string, _ ...interface{}) error {
 		return fmt.Errorf("cannot find step: %s", id)
 	}
 	if step.State == tasks.StateFailure {
-		return taskRunOverOnce(id)
+		logger.Log.Errorf("step %s has run over once", id)
+		return nil
 	}
 
-	task, err := MachineryInstance.GetBackend().GetState(id)
+	task, err := machineryInstance.GetBackend().GetState(id)
 	if err != nil {
 		return err
 	}
@@ -89,31 +138,7 @@ func errorToDb(error, id string, _ ...interface{}) error {
 		return err
 	}
 
-	_, err = service.Instance.UpdateItem(Step{JobId: step.JobId, State: tasks.StatePending},
-		&Step{
-			State: StateAborted,
-			Error: fmt.Sprintf("task %s has failed, terminate this task", id),
-		}, -1)
-	if err != nil {
-		return err
-	}
-
-	_, err = service.Instance.UpdateItem(Job{ID: step.JobId}, &Job{
-		JobInfo: JobInfo{
-			State:      tasks.StateFailure,
-			FinishTime: time.Now(),
-		},
-	}, 1)
-	if err != nil {
-		return err
-	}
-	logger.Log.Infof("task %s (%s) finished failed", id, task.TaskName)
-	return nil
-}
-
-func taskRunOverOnce(id string) error {
-	logger.Log.Errorf("step %s has run over once!", id)
-	return nil
+	return finishError(step.JobId)
 }
 
 func HumanReadableResults(taskResults []*tasks.TaskResult) string {

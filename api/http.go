@@ -6,7 +6,6 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/yuanJewel/go-core/logger"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -26,6 +25,14 @@ func Fusion(u ...string) string {
 	return strings.Join(u, "/")
 }
 
+func GetParams(ctx iris.Context, key string) string {
+	data := ctx.GetHeader(key)
+	if data == "" {
+		data = ctx.URLParam(key)
+	}
+	return data
+}
+
 func HttpUtil(method, url string, timeout time.Duration, headers http.Header, body io.Reader) (int, []byte, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -40,7 +47,7 @@ func HttpUtil(method, url string, timeout time.Duration, headers http.Header, bo
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-	_body, err := ioutil.ReadAll(resp.Body)
+	_body, err := io.ReadAll(resp.Body)
 	return resp.StatusCode, _body, err
 }
 
@@ -127,7 +134,7 @@ func httpMethodUtil(method, url, username, password string, timeout time.Duratio
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
-	_body, err := ioutil.ReadAll(resp.Body)
+	_body, err := io.ReadAll(resp.Body)
 	return resp.StatusCode, _body, err
 }
 

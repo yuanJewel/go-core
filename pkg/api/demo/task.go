@@ -82,6 +82,8 @@ func deleteJobs(ctx iris.Context) {
 // @Description 获取作业任务
 // @Param id query string false "step"
 // @Param id header string false "step"
+// @Param job_id query string true "job_id"
+// @Param job_id header string true "job_id"
 // @Param page header string false "page"
 // @Param body body task.StepInfo false "Info"
 // @tags job
@@ -94,7 +96,8 @@ func deleteJobs(ctx iris.Context) {
 // @Security ApiKeyAuth
 // @Router /api/v1/task/step [get]
 func getSteps(ctx iris.Context) {
-	service.GetDbInfoByIdsAndOrder(ctx, task.Step{}, &[]task.Step{}, "stage")
+	service.GetDbInfo(ctx, task.Step{}, &[]task.Step{}, []string{"id", "job_id"},
+		[]string{"date desc", "start_time desc"})
 }
 
 // @Summary 获取作业任务
@@ -114,5 +117,5 @@ func getSteps(ctx iris.Context) {
 // @Router /api/v1/task/register [get]
 func getRegister(ctx iris.Context) {
 	response := api.ResponseInit(ctx)
-	api.ResponseBody(ctx, response, task.MachineryInstance.GetRegisteredTaskNames())
+	api.ResponseBody(ctx, response, task.GetRegisteredTaskNames())
 }
