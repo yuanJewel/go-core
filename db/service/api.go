@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/kataras/iris/v12"
 	"github.com/yuanJewel/go-core/api"
@@ -186,6 +185,10 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	id := api.GetParams(ctx, "id")
 	header := http.Header{}
 	header.Set("id", id)
+	if id == "" {
+		api.ReturnErr(api.GetIdError, ctx, fmt.Errorf("id cannot be empty"), response)
+		return
+	}
 	code, reverserBody := api.ReverserInfoUtil(ctx, response, header, api.NilBody, http.MethodGet, path)
 	if code != 200 {
 		return
@@ -206,7 +209,7 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	}
 	if len(returnObject.Data) == 0 {
 		api.ReturnErr(api.GetBodyError, ctx,
-			errors.New("the data that needs to be modified cannot be obtained according to the key in the header"),
+			fmt.Errorf("the data that needs to be modified cannot be obtained according to the key in the header"),
 			response)
 		return
 	}
@@ -236,13 +239,20 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 	api.ResponseBody(ctx, response, object)
 }
 
-// DeleteDb 根据id删除数据
+// DeleteDb 根据id删除数据，只关注id不支持匹配删除
 // path 为根据Id查看数据的接口名
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 func DeleteDb(ctx iris.Context, path string, object interface{}) {
 	response := api.ResponseInit(ctx)
 	instance := Instance.WithContext(ctx)
-	code, reverserBody := api.ReverserUtil(ctx, response, http.MethodGet, path)
+	id := api.GetParams(ctx, "id")
+	if id == "" {
+		api.ReturnErr(api.GetIdError, ctx, fmt.Errorf("id cannot be empty"), response)
+		return
+	}
+	header := http.Header{}
+	header.Set("id", id)
+	code, reverserBody := api.ReverserInfoUtil(ctx, response, header, api.NilBody, http.MethodGet, path)
 	if code != 200 {
 		return
 	}

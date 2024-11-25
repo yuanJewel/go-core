@@ -19,6 +19,7 @@ const (
 	GetBodyError     = 12
 	GetTokenError    = 13
 	GetHeaderError   = 14
+	GetIdError       = 15
 
 	// login error
 	AuthenticationError = 31
