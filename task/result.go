@@ -81,6 +81,7 @@ func resultToDb(id string, _ ...interface{}) error {
 	if err != nil {
 		return err
 	}
+	logger.Log.Debugf("result success step %s successfully", id)
 	return nil
 }
 
@@ -138,6 +139,7 @@ func errorToDb(error, id string, _ ...interface{}) error {
 		return err
 	}
 
+	logger.Log.Debugf("result error step %s successfully", id)
 	return finishError(step.JobId)
 }
 

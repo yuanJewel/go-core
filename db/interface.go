@@ -27,5 +27,6 @@ type Service interface {
 	UpdateItem(interface{}, interface{}, ...int64) (*gorm.DB, error)
 	DeleteItem(interface{}, ...int64) (*gorm.DB, error)
 	GetItems(interface{}, interface{}) (int64, error)
+	GetAllItems(interface{}, interface{}) (int64, error)
 	GetItem(interface{}, interface{}) (bool, error)
 }

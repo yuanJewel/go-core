@@ -15,7 +15,7 @@ func createTask(job string, stage int) error {
 		signatures []*tasks.Signature
 	)
 	logger.Log.Debugf("start create task in job(%s[%d])", job, stage)
-	number, err := service.Instance.GetItems(Step{JobId: job, StepInfo: StepInfo{Stage: stage}}, &steps)
+	number, err := service.Instance.GetAllItems(Step{JobId: job, StepInfo: StepInfo{Stage: stage}}, &steps)
 	if err != nil {
 		return err
 	}
@@ -104,8 +104,7 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 		return fmt.Errorf("job(%s) is not exists", jobId)
 	}
 	if job.State == StateAborted {
-		finishObject.Abort(jobId)
-		return nil
+		return finishAbort(jobId)
 	}
 
 	if stage >= job.TotalStage {
@@ -123,14 +122,26 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 		return nil
 	}
 
-	_, err = service.Instance.GetItems(Step{JobId: jobId, StepInfo: StepInfo{Stage: stage}}, &steps)
+	_, err = service.Instance.GetAllItems(Step{JobId: jobId, StepInfo: StepInfo{Stage: stage}}, &steps)
 	if err != nil {
 		return err
 	}
 
 	for _, s := range steps {
 		if s.State != tasks.StateSuccess {
-			return finishError(jobId)
+			if s.State != tasks.StateStarted {
+				logger.Log.Debugf("task(%s) is not success in job(%s[%d]), %v", s.ID, jobId, stage, s)
+				return finishError(jobId)
+			}
+			task, err := machineryInstance.GetBackend().GetState(s.ID)
+			if err != nil {
+				logger.Log.Debugf("get task(%s) state error: %v", s.ID, err)
+				return err
+			}
+			if task.State != tasks.StateSuccess {
+				logger.Log.Debugf("task(%s) is not success in job(%s[%d]), %v", s.ID, jobId, stage, s)
+				return finishError(jobId)
+			}
 		}
 	}
 

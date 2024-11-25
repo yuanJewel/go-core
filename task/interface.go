@@ -30,7 +30,7 @@ func (f *FinishStruct) Abort(id string) {
 	logger.Log.Warnf("Task %s finish abort !", id)
 }
 
-func finishError(id string) error {
+func finishAbort(id string) error {
 	_, err := service.Instance.UpdateItem(Step{JobId: id, State: tasks.StatePending},
 		&Step{
 			State: StateAborted,
@@ -39,8 +39,16 @@ func finishError(id string) error {
 	if err != nil {
 		return err
 	}
+	finishObject.Abort(id)
+	return nil
+}
 
-	_, err = service.Instance.UpdateItem(Job{ID: id}, &Job{
+func finishError(id string) error {
+	if err := finishAbort(id); err != nil {
+		return err
+	}
+
+	_, err := service.Instance.UpdateItem(Job{ID: id}, &Job{
 		JobInfo: JobInfo{
 			State:      tasks.StateFailure,
 			FinishTime: time.Now(),

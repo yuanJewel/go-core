@@ -150,7 +150,7 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 			api.ReturnErr(api.SpecialReturnError, ctx, err, response)
 			return
 		}
-		nums, err := instance.GetItems(_info, object)
+		nums, err := instance.GetAllItems(_info, object)
 		if err != nil {
 			api.ReturnErr(api.SelectDbError, ctx, err, response)
 			return

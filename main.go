@@ -30,7 +30,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.4.3
+// @version 1.4.4
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -57,11 +57,11 @@ func main() {
 	}
 
 	if err := service.InitDb(&config.GlobalConfig.DataSourceDetail); err != nil {
-		log.Fatal("Init Database Error...", err)
+		log.Fatal("Init Database Connection Error...", err)
 	}
 
 	if err := redis.InitRedis(&config.GlobalConfig.Redis); err != nil {
-		log.Fatal("Init Database Error...", err)
+		log.Fatal("Init Redis Connection Error...", err)
 	}
 
 	if *initDb {

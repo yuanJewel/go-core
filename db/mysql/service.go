@@ -149,6 +149,19 @@ func (m *Mysql) GetItems(find interface{}, get interface{}) (int64, error) {
 	return int64(math.Ceil(float64(total) / float64(m.mysqlConfig.maxSearchLimit))), result.Error
 }
 
+// GetAllItems input get must be an interface type
+func (m *Mysql) GetAllItems(find interface{}, get interface{}) (int64, error) {
+	var total int64 = 0
+	if err := checkInput(get, reflect.Slice); err != nil {
+		return total, err
+	}
+	result := m.dbConn.Where(find).Model(get).Count(&total).Find(get)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return total, nil
+	}
+	return total, result.Error
+}
+
 // GetItem input get must be an interface type
 func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 	if err := checkInput(get, reflect.Struct); err != nil {
@@ -156,7 +169,7 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 	}
 
 	// Check if the query rule will only get one
-	row := m.dbConn.Model(get).Where(find).Limit(m.mysqlConfig.maxSearchLimit).Find(&[]struct{}{}).RowsAffected
+	row := m.dbConn.Model(get).Where(find).Find(&[]struct{}{}).RowsAffected
 	if row > 1 {
 		var _func_name = "unkown_function"
 		pc, _, _, ok := runtime.Caller(1)
