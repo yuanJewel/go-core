@@ -4,74 +4,77 @@ import (
 	"fmt"
 	"github.com/yuanJewel/go-core/db/service"
 	"github.com/yuanJewel/go-core/logger"
-	"time"
 )
 
-var stepToJob = make(map[string]string)
-
-func SetVariable(i, key, value string) {
-	id := getJobId(i)
-	redisInstance.Set(-1, redisKey(id, key), value)
+// SetVariable 设置需要传递的变量，可以直接覆盖填写，该类型为字符串
+func SetVariable(i, key, value string) error {
+	id, err := getJobId(i)
+	if err != nil {
+		return err
+	}
+	varKey := redisKey(id, key)
+	defer needRecycleKey(i, varKey)
+	return redisInstance.Set(varKey, value, varExpiration)
 }
 
 func GetVariable(i, key string) string {
-	id := getJobId(i)
-	value, err := redisInstance.Get(redisKey(id, key))
+	jobId, err := getJobId(i)
 	if err != nil {
 		return ""
 	}
-	return string(value)
+	id := redisKey(jobId, key)
+	t, err := redisInstance.Type(id)
+	if err != nil {
+		return ""
+	}
+	switch t {
+	case "string":
+		value, err := redisInstance.Get(id)
+		if err != nil {
+			return ""
+		}
+		return value
+	case "list":
+		value, err := redisInstance.LAll(id)
+		if err != nil {
+			return ""
+		}
+		return fmt.Sprintf("%v", value)
+	}
+	return ""
 }
 
-// AppendVariable 分隔符为 ; 所以传递值中不能有v
-func AppendVariable(i, key, value string) {
-	id := getJobId(i)
-	lock := true
-	for lock {
-		var err error
-		lock, err = redisInstance.Exists(redisKey(id, key) + "_lock")
-		if err != nil {
-			logger.Log.Errorf("redis for task var lock is error, please check %v", err)
-		}
-		time.Sleep(time.Millisecond)
-	}
-	redisInstance.Set(-1, redisKey(id, key)+"_lock", time.Now().String())
-	defer redisInstance.Del(redisKey(id, key) + "_lock")
-
-	exists, err := redisInstance.Exists(redisKey(id, key))
+// AppendVariable 创建或增加需要传递的变量，用于追加参数，该类型为列表
+func AppendVariable(i, key, value string) error {
+	id, err := getJobId(i)
 	if err != nil {
-		logger.Log.Errorf("redis for task var lock is error, please check %v", err)
+		return err
 	}
-	if !exists {
-		SetVariable(i, key, value)
-		return
-	}
-	v, err := redisInstance.Get(redisKey(id, key))
-	if err != nil {
-		logger.Log.Errorf("redis for task var lock is error, please check %v", err)
-		return
-	}
-	redisInstance.Set(-1, redisKey(id, key), fmt.Sprintf("%s;%s", v, value))
+	varKey := redisKey(id, key)
+	defer needRecycleKey(i, varKey)
+	return redisInstance.RPush(varKey, value, varExpiration)
 }
 
 func redisKey(id, key string) string {
-	return fmt.Sprintf("task_%s_var_%s", id, key)
+	return fmt.Sprintf("job:%s:var:%s", id, key)
 }
 
-func getJobId(stepId string) string {
-	if jobId, ok := stepToJob[stepId]; ok {
-		return jobId
+func getJobId(stepId string) (string, error) {
+	if jobId, ok := stepToJob.Load(stepId); ok {
+		return jobId.(string), nil
 	}
 	var step Step
 	exists, err := service.Instance.GetItem(Step{ID: stepId}, &step)
 	if err != nil {
-		logger.Log.Errorf("get job id from step %s is error, please check %v", stepId, err)
-		return "Error_unknown_step_" + stepId
+		err = fmt.Errorf("get job id from step %s is error, please check %v", stepId, err)
+		logger.Log.Errorln(err)
+		return "", err
 	}
 	if !exists {
-		logger.Log.Errorf("cannot find step: %s", stepId)
-		return "Error_unknown_step_" + stepId
+		err = fmt.Errorf("cannot find step: %s", stepId)
+		logger.Log.Errorln(err)
+		return "", err
 	}
-	stepToJob[stepId] = step.JobId
-	return step.JobId
+	stepToJob.Store(stepId, step.JobId)
+	return step.JobId, nil
 }

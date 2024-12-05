@@ -171,13 +171,13 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 	// Check if the query rule will only get one
 	row := m.dbConn.Model(get).Where(find).Find(&[]struct{}{}).RowsAffected
 	if row > 1 {
-		var _func_name = "unkown_function"
+		var funcName = "unknown_function"
 		pc, _, _, ok := runtime.Caller(1)
 		if ok {
-			_func_name = runtime.FuncForPC(pc).Name()
+			funcName = runtime.FuncForPC(pc).Name()
 		}
-		gologger.Log.Errorf("方法 %s 执行查询表数据, 查询逻辑可以获取%d条记录，但是程序只需要一条记录",
-			_func_name, row)
+		gologger.Log.Errorf("Method %s executes query table data. The query logic can obtain %d records, but the program only needs one record.",
+			funcName, row)
 		return false, object.SelectOverOneError
 	}
 
@@ -242,7 +242,7 @@ func affectedRowsIsError(db *gorm.DB, right ...int64) error {
 		}
 	}
 
-	gologger.Log.Errorf("数据库[%s]发生%d条记录的修改，不是期望的%d, 修改内容为: %v",
-		db.Statement.Table, db.RowsAffected, right, db.Statement.Dest)
+	gologger.Log.Errorf("%d records have been modified in database [%s], which is not the expected %d. The modification content is: %v",
+		db.RowsAffected, db.Statement.Table, right, db.Statement.Dest)
 	return object.AffectedRowsError
 }

@@ -23,7 +23,7 @@ import (
 // @Security ApiKeyAuth
 // @Router /api/v1/task/job [get]
 func getJobs(ctx iris.Context) {
-	service.GetDbInfoByIdsAndOrder(ctx, task.Job{}, &[]task.Job{}, "date")
+	service.GetDbInfoByIdsAndOrder(ctx, task.Job{}, &[]task.Job{}, "date desc")
 }
 
 // @Summary 创建作业任务

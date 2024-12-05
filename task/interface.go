@@ -39,6 +39,11 @@ func finishAbort(id string) error {
 	if err != nil {
 		return err
 	}
+	err = recycleRedisKey(id, 2)
+	if err != nil {
+		return err
+	}
+
 	finishObject.Abort(id)
 	return nil
 }
@@ -57,7 +62,74 @@ func finishError(id string) error {
 	if err != nil {
 		return err
 	}
+	err = recycleRedisKey(id, 4)
+	if err != nil {
+		return err
+	}
 
 	finishObject.Error(id)
 	return nil
+}
+
+func finishSuccess(job Job) error {
+	_, err := service.Instance.UpdateItem(Job{ID: job.ID}, &Job{
+		JobInfo: JobInfo{
+			State:       tasks.StateSuccess,
+			ActiveStage: job.TotalStage,
+			FinishTime:  time.Now(),
+		},
+	}, 1)
+	if err != nil {
+		return err
+	}
+	err = recycleRedisKey(job.ID, 1)
+	if err != nil {
+		return err
+	}
+
+	finishObject.Success(job.ID)
+	return nil
+}
+
+func needRecycleKey(stepId, key string) {
+	id, err := getJobId(stepId)
+	if err != nil {
+		logger.Log.Errorln(err)
+		return
+	}
+	err = redisInstance.SAdd(recycleKeyId(id), key, lockExpiration)
+	if err != nil {
+		return
+	}
+}
+
+func recycleRedisKey(id string, speed int) error {
+	hasRecycleKey := make(map[string]bool)
+	all, err := redisInstance.SMembers(recycleKeyId(id))
+	if err != nil {
+		return err
+	}
+
+	for _, key := range all {
+		if _, ok := hasRecycleKey[key]; ok {
+			continue
+		}
+		hasRecycleKey[key] = true
+		exists, err := redisInstance.Exists(key)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			continue
+		}
+		err = redisInstance.Expire(key, finishExpiration*time.Duration(speed))
+		if err != nil {
+			return err
+		}
+	}
+	return redisInstance.Del(recycleKeyId(id))
+}
+
+func recycleKeyId(id string) string {
+	return "recycle:key:" + id
 }

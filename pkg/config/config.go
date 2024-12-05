@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/jinzhu/configor"
 	"github.com/yuanJewel/go-core/config"
-	"github.com/yuanJewel/go-core/db/redis"
 	"github.com/yuanJewel/go-core/task"
 )
 
@@ -17,7 +16,7 @@ type AppConfig struct {
 	config.Auth             `yaml:"auth"`
 	config.DataSourceDetail `yaml:"db"`
 	Ldap                    `yaml:"ldap"`
-	redis.Redis             `yaml:"redis"`
+	config.Redis            `yaml:"redis"`
 	task.Task               `yaml:"task"`
 }
 

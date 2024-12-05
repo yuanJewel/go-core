@@ -22,8 +22,8 @@ func LockError(id string) error {
 }
 
 // LockTaskState Non-idempotent tasks require additional protection locks to use this module
-func LockTaskState(id string) error {
-	lockId := fmt.Sprintf("task_%s_lock", id)
+func LockTaskState(id string, suffix ...string) error {
+	lockId := fmt.Sprintf("step:%s:%s:lock", id, strings.Join(suffix, ":"))
 	lock, err := redisInstance.Exists(lockId)
 	if err != nil {
 		logger.Log.Errorf("redis for task is error, please check %v", err)
@@ -33,12 +33,16 @@ func LockTaskState(id string) error {
 		logger.Log.Debugf("task(%s) has been locked", id)
 		return LockError(id)
 	}
-	redisInstance.Set(12*time.Hour, lockId, time.Now().String())
+	err = redisInstance.Set(lockId, time.Now().String(), lockExpiration)
+	if err != nil {
+		return err
+	}
+	defer needRecycleKey(id, lockId)
 	return nil
 }
 
 func resultToDb(id string, _ ...interface{}) error {
-	task, err := machineryInstance.GetBackend().GetState(id)
+	task, err := machineryInstance.GetBackend().GetState(signatureId(id))
 	if err != nil {
 		return err
 	}
@@ -55,7 +59,7 @@ func resultToDb(id string, _ ...interface{}) error {
 		}
 	}
 
-	t := LockTaskState(id + "_end")
+	t := LockTaskState(id, "end")
 	if t != nil {
 		return nil
 	}
@@ -85,15 +89,17 @@ func resultToDb(id string, _ ...interface{}) error {
 	return nil
 }
 
-func errorToDb(error, id string, _ ...interface{}) error {
-	t := LockTaskState(id + "_end")
+func errorToDb(errorStr, id string, _ ...interface{}) error {
+	t := LockTaskState(id, "end")
 	if t != nil {
 		return nil
 	}
 	step := Step{}
+	signatureKey := signatureId(id)
 
-	if strings.HasPrefix(id, "finish-") && strings.Contains(id, "-job-") {
+	if strings.HasPrefix(id, "finish:") && strings.Contains(id, "-job-") {
 		idList := strings.Split(id, "-job-")
+		signatureKey = idList[0]
 		id = idList[0]
 		finishObject.Error(idList[1])
 		_, err := service.Instance.AddItem(&Step{
@@ -124,7 +130,7 @@ func errorToDb(error, id string, _ ...interface{}) error {
 		return nil
 	}
 
-	task, err := machineryInstance.GetBackend().GetState(id)
+	task, err := machineryInstance.GetBackend().GetState(signatureKey)
 	if err != nil {
 		return err
 	}
@@ -132,7 +138,7 @@ func errorToDb(error, id string, _ ...interface{}) error {
 	_, err = service.Instance.UpdateItem(Step{ID: id}, &Step{
 		State:      task.State,
 		Result:     HumanReadableResults(task.Results),
-		Error:      error,
+		Error:      errorStr,
 		FinishTime: time.Now(),
 	}, 1)
 	if err != nil {
@@ -188,13 +194,6 @@ func HumanReadableResults(taskResults []*tasks.TaskResult) string {
 }
 
 func desensitizationResults(input string) string {
-	var v interface{}
-	err := json.Unmarshal([]byte(input), &v)
-	if err != nil {
-		if output, err := json.Marshal(map[string]string{"output": input}); err == nil {
-			input = string(output)
-		}
-	}
 	for _, key := range DesensitizationKeyList {
 		reg := regexp.MustCompile(fmt.Sprintf("\"%s\":\"[^\"]*\"", key))
 		input = reg.ReplaceAllString(input, fmt.Sprintf("\"%s\":\"***\"", key))

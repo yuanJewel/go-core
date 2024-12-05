@@ -9,6 +9,7 @@ import (
 	"github.com/yuanJewel/go-core/db/redis"
 	"github.com/yuanJewel/go-core/logger"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -17,16 +18,24 @@ const StateAborted = "ABORTED"
 var (
 	machineryInstance *machinery.Server
 	redisInstance     *redis.Store
+	lockExpiration    time.Duration
+	varExpiration     time.Duration
+	finishExpiration  time.Duration
+	stepToJob         sync.Map
 )
 
 func InitWork(task Task, taskMap map[string]interface{}, f FinishInterface) (err error) {
 	rabbitmq := task.RabbitMq
 	redisConf := task.Redis
+	lockExpiration = time.Duration(task.LockExpiration) * time.Second
+	varExpiration = time.Duration(task.VarExpiration) * time.Second
+	finishExpiration = time.Duration(task.ResultsExpiration) * time.Second
+	stepToJob = sync.Map{}
 	machineryInstance, err = machinery.NewServer(&config.Config{
 		Broker:          fmt.Sprintf("amqp://%s:%s@%s:%s", rabbitmq.Username, rabbitmq.Password, rabbitmq.Host, rabbitmq.Port),
 		DefaultQueue:    rabbitmq.Queue,
 		ResultBackend:   fmt.Sprintf("redis://%s@%s:%s/%d", redisConf.Password, redisConf.Host, redisConf.Port, redisConf.Db),
-		ResultsExpireIn: 3600,
+		ResultsExpireIn: task.ResultsExpiration,
 		Redis: &config.RedisConfig{
 			MaxIdle:      redisConf.PoolSize,
 			ReadTimeout:  redisConf.Timeout,

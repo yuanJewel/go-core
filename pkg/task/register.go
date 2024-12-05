@@ -18,17 +18,25 @@ func testError(id string, data ...interface{}) (string, error) {
 		return t.Error(), nil
 	}
 
-	s := fmt.Sprintf("task(%s) start in %s, input is %v", id, time.Now().String(), data)
-	fmt.Println("yuanTag " + s)
+	err := task.SetVariable(id, "test-str", fmt.Sprintf("%v", data[0]))
+	if err != nil {
+		return "", err
+	}
+	s := fmt.Sprintf("task(%s) start in %s, input is %v, variable is %s", id, time.Now().String(), data,
+		task.GetVariable(id, "test-str"))
+	fmt.Println("yuanTag Error " + s)
 	time.Sleep(1 * time.Second)
 	return s, fmt.Errorf("%v", data)
 }
 
 func testSuccess(id string, data ...interface{}) (string, error) {
 	s := fmt.Sprintf("task(%s) start in %s, input is %v, variable is %s", id, time.Now().String(),
-		data, task.GetVariable(id, "test"))
-	task.AppendVariable(id, "test", fmt.Sprintf("%v", data[0]))
-	fmt.Println("yuanTag " + s)
+		data, task.GetVariable(id, "test-list"))
+	err := task.AppendVariable(id, "test-list", fmt.Sprintf("%v", data[0]))
+	if err != nil {
+		return "", err
+	}
+	fmt.Println("yuanTag Success " + s)
 	time.Sleep(3 * time.Second)
 	return s, nil
 }

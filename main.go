@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/kataras/iris/v12"
 	"github.com/prometheus/common/version"
@@ -16,8 +19,6 @@ import (
 	"github.com/yuanJewel/go-core/pkg/db"
 	taskPkg "github.com/yuanJewel/go-core/pkg/task"
 	"github.com/yuanJewel/go-core/task"
-	"log"
-	"time"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.4.5
+// @version 1.4.6
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -52,16 +53,19 @@ func main() {
 	kingpin.Parse()
 
 	logger.PrintLogStatus()
-	if err := config.LoadConfig(*configPath); err != nil {
-		log.Fatal("Load Config Error...", err)
+	initServices := []struct {
+		name string
+		fn   func() error
+	}{
+		{"配置", func() error { return config.LoadConfig(*configPath) }},
+		{"数据库", func() error { return service.InitDb(&config.GlobalConfig.DataSourceDetail) }},
+		{"缓存", func() error { return redis.InitRedis(&config.GlobalConfig.Redis) }},
 	}
 
-	if err := service.InitDb(&config.GlobalConfig.DataSourceDetail); err != nil {
-		log.Fatal("Init Database Connection Error...", err)
-	}
-
-	if err := redis.InitRedis(&config.GlobalConfig.Redis); err != nil {
-		log.Fatal("Init Redis Connection Error...", err)
+	for _, svc := range initServices {
+		if err := svc.fn(); err != nil {
+			log.Fatalf("%s初始化失败: %v", svc.name, err)
+		}
 	}
 
 	if *initDb {

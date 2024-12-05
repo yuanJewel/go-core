@@ -25,7 +25,7 @@ func createTask(job string, stage int) error {
 
 	for _, step := range steps {
 		signatures = append(signatures, &tasks.Signature{
-			UUID: step.ID,
+			UUID: signatureId(step.ID),
 			Name: step.Tag,
 			Args: []tasks.Arg{{
 				Type:  "string",
@@ -48,12 +48,12 @@ func createTask(job string, stage int) error {
 	if err != nil {
 		return err
 	}
-	group, err := tasks.NewGroup(signatures...)
+	group, err := newGroup(signatures...)
 	if err != nil {
 		return err
 	}
 
-	finishId := fmt.Sprintf("finish_%s", uuid.New().String())
+	finishId := fmt.Sprintf("finish:%s", group.GroupUUID)
 	chord, err := tasks.NewChord(group, &tasks.Signature{
 		UUID: finishId,
 		Name: "finish",
@@ -68,7 +68,7 @@ func createTask(job string, stage int) error {
 		RetryCount:                  0,
 		OnSuccess:                   []*tasks.Signature{},
 		OnError: []*tasks.Signature{{
-			UUID: finishId + "_error",
+			UUID: finishId + ":error",
 			Name: "error",
 			Args: []tasks.Arg{
 				{
@@ -87,6 +87,25 @@ func createTask(job string, stage int) error {
 		logger.Log.Debugf("create task(%v) successfully", steps)
 	}
 	return err
+}
+
+func newGroup(signatures ...*tasks.Signature) (*tasks.Group, error) {
+	groupUUID := uuid.New().String()
+	groupID := fmt.Sprintf("group:%v", groupUUID)
+
+	for _, signature := range signatures {
+		if signature.UUID == "" {
+			signatureID := uuid.New().String()
+			signature.UUID = fmt.Sprintf("step:%v", signatureID)
+		}
+		signature.GroupUUID = groupID
+		signature.GroupTaskCount = len(signatures)
+	}
+
+	return &tasks.Group{
+		GroupUUID: groupID,
+		Tasks:     signatures,
+	}, nil
 }
 
 func finishTask(jobId string, stage int, _ ...interface{}) error {
@@ -108,18 +127,7 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 	}
 
 	if stage >= job.TotalStage {
-		_, err = service.Instance.UpdateItem(Job{ID: jobId}, &Job{
-			JobInfo: JobInfo{
-				State:       tasks.StateSuccess,
-				ActiveStage: job.TotalStage,
-				FinishTime:  time.Now(),
-			},
-		}, 1)
-		if err != nil {
-			return err
-		}
-		finishObject.Success(jobId)
-		return nil
+		return finishSuccess(job)
 	}
 
 	_, err = service.Instance.GetAllItems(Step{JobId: jobId, StepInfo: StepInfo{Stage: stage}}, &steps)
@@ -133,7 +141,7 @@ func finishTask(jobId string, stage int, _ ...interface{}) error {
 				logger.Log.Debugf("task(%s) is not success in job(%s[%d]), %v", s.ID, jobId, stage, s)
 				return finishError(jobId)
 			}
-			task, err := machineryInstance.GetBackend().GetState(s.ID)
+			task, err := machineryInstance.GetBackend().GetState(signatureId(s.ID))
 			if err != nil {
 				logger.Log.Debugf("get task(%s) state error: %v", s.ID, err)
 				return err
@@ -162,7 +170,7 @@ func newSignature(id string, status string) []*tasks.Signature {
 		return nil
 	}
 	return []*tasks.Signature{{
-		UUID: id + "_" + status,
+		UUID: status + ":" + id,
 		Name: status,
 		Args: []tasks.Arg{
 			{
@@ -172,4 +180,8 @@ func newSignature(id string, status string) []*tasks.Signature {
 		},
 		RetryCount: 0,
 	}}
+}
+
+func signatureId(id string) string {
+	return fmt.Sprintf("step:%v", id)
 }
