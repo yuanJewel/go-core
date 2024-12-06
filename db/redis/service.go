@@ -15,7 +15,9 @@ import (
 // Ping checks Redis connection status
 func (s *Store) Ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
-	defer cancel()
+	if cancel != nil {
+		defer cancel()
+	}
 
 	if err := s.redisInstance.Ping(ctx).Err(); err != nil {
 		return fmt.Errorf("redis ping failed: %w", err)
@@ -37,12 +39,37 @@ func (s *Store) WithContext(ctx context.Context) *Store {
 // Expire sets key expiration
 func (s *Store) Expire(key string, expiration time.Duration) error {
 	ctx, cancel := s.getContext()
-	defer cancel()
+	if cancel != nil {
+		defer cancel()
+	}
 	if expiration == 0 {
 		expiration = s.expiration
 	}
 
 	return s.redisInstance.Expire(ctx, key, expiration).Err()
+}
+
+func (s *Store) TTL(key string) (time.Duration, error) {
+	ctx, cancel := s.getContext()
+	if cancel != nil {
+		defer cancel()
+	}
+
+	return s.redisInstance.TTL(ctx, key).Result()
+}
+
+func (s *Store) expire(key string, expiration time.Duration) error {
+	now, err := s.TTL(key)
+	if err != nil {
+		return err
+	}
+	if expiration == 0 {
+		expiration = s.expiration
+	}
+	if now < expiration {
+		return s.Expire(key, expiration)
+	}
+	return nil
 }
 
 // Del deletes a key

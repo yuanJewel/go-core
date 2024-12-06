@@ -97,7 +97,7 @@ func needRecycleKey(stepId, key string) {
 		logger.Log.Errorln(err)
 		return
 	}
-	err = redisInstance.SAdd(recycleKeyId(id), key, lockExpiration)
+	err = redisInstance.SAdd(recycleKeyId(id), lockExpiration, key)
 	if err != nil {
 		return
 	}

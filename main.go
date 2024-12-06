@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/yuanJewel/go-core/db/redis"
 	"log"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/prometheus/common/version"
 	apiInterface "github.com/yuanJewel/go-core/api"
 	"github.com/yuanJewel/go-core/asset"
-	"github.com/yuanJewel/go-core/db/redis"
 	"github.com/yuanJewel/go-core/db/service"
 	_ "github.com/yuanJewel/go-core/docs"
 	"github.com/yuanJewel/go-core/logger"
@@ -31,7 +31,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.4.6
+// @version 1.5.1
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -58,8 +58,8 @@ func main() {
 		fn   func() error
 	}{
 		{"配置", func() error { return config.LoadConfig(*configPath) }},
-		{"数据库", func() error { return service.InitDb(&config.GlobalConfig.DataSourceDetail) }},
 		{"缓存", func() error { return redis.InitRedis(&config.GlobalConfig.Redis) }},
+		{"数据库", func() error { return service.InitDb(&config.GlobalConfig.DataSourceDetail) }},
 	}
 
 	for _, svc := range initServices {

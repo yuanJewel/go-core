@@ -24,7 +24,7 @@ func (s *Store) LPush(key string, value interface{}, expiration time.Duration) e
 	if err := s.redisInstance.LPush(ctx, key, value).Err(); err != nil {
 		return fmt.Errorf("failed to add redis list element - key: %s, error: %w", key, err)
 	}
-	return s.Expire(key, expiration)
+	return s.expire(key, expiration)
 }
 
 // RPush 将元素添加到列表
@@ -46,7 +46,7 @@ func (s *Store) RPush(key string, value interface{}, expiration time.Duration) e
 	if err := s.redisInstance.RPush(ctx, key, value).Err(); err != nil {
 		return fmt.Errorf("failed to add redis list element - key: %s, error: %w", key, err)
 	}
-	return s.Expire(key, expiration)
+	return s.expire(key, expiration)
 }
 
 // RPop 从列表中删除并返回最后一个元素

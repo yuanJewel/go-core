@@ -69,17 +69,17 @@ func GetDbInfoByIdsAndOrder(ctx iris.Context, search, object interface{}, order 
 func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []string) {
 	response := api.ResponseInit(ctx)
 	page := initPageString(ctx)
-	instance := Instance.WithContext(ctx)
+	dbInstance := Instance.WithContext(ctx)
 	for _, key := range keys {
 		if key != "" {
 			keyString := initIdsString(api.GetParams(ctx, key))
-			instance = instance.Search(fmt.Sprintf("%s IN ?", key), keyString)
+			dbInstance = dbInstance.Search(fmt.Sprintf("%s IN ?", key), keyString)
 		}
 	}
 
 	for _, order := range orders {
 		if order != "" {
-			instance = instance.Order(order)
+			dbInstance = dbInstance.Order(order)
 		}
 	}
 
@@ -103,14 +103,14 @@ func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []stri
 			}
 			switch v.(type) {
 			case int:
-				instance = instance.Where(fmt.Sprintf("%s = ?", k), v)
+				dbInstance = dbInstance.Where(fmt.Sprintf("%s = ?", k), v)
 			case string:
-				instance = instance.Where(fmt.Sprintf("%s Like ?", k), fmt.Sprintf("%%%s%%", v))
+				dbInstance = dbInstance.Where(fmt.Sprintf("%s Like ?", k), fmt.Sprintf("%%%s%%", v))
 			}
 		}
 	}
 
-	nums, err := instance.OffsetPages(page-1).GetItems(search, object)
+	nums, err := dbInstance.OffsetPages(page-1).GetItems(search, object)
 	if err != nil {
 		api.ReturnErr(api.SelectDbError, ctx, err, response)
 		return
@@ -127,7 +127,7 @@ func GetDbInfo(ctx iris.Context, search, object interface{}, keys, orders []stri
 // special 函数，可以修改bodyObject，如添加自定义字段
 func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]interface{}) error) {
 	response := api.ResponseInit(ctx)
-	instance := Instance.WithContext(ctx)
+	dbInstance := Instance.WithContext(ctx)
 	body, err := ctx.GetBody()
 	if err != nil {
 		api.ReturnErr(api.GetBodyError, ctx, err, response)
@@ -149,7 +149,7 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 			api.ReturnErr(api.SpecialReturnError, ctx, err, response)
 			return
 		}
-		nums, err := instance.GetAllItems(_info, object)
+		nums, err := dbInstance.GetAllItems(_info, object)
 		if err != nil {
 			api.ReturnErr(api.SelectDbError, ctx, err, response)
 			return
@@ -165,7 +165,7 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 	}
 
 	if len(needAddSlice) > 0 {
-		_result, err := instance.AddItem(object, int64(len(needAddSlice)))
+		_result, err := dbInstance.AddItem(object, int64(len(needAddSlice)))
 		if err != nil {
 			api.ReturnErr(api.AddDbError, ctx, err, response)
 			return
@@ -181,7 +181,7 @@ func PostDbInfo(ctx iris.Context, object interface{}, special func(*map[string]i
 // special 函数，可以修改bodyObject，如添加自定义字段
 func PutDbInfoById(ctx iris.Context, path string, object interface{}, special func(*map[string]interface{}) error) {
 	response := api.ResponseInit(ctx)
-	instance := Instance.WithContext(ctx)
+	dbInstance := Instance.WithContext(ctx)
 	id := api.GetParams(ctx, "id")
 	header := http.Header{}
 	header.Set("id", id)
@@ -230,7 +230,7 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 		api.ReturnErr(api.ReflectError, ctx, err, response)
 		return
 	}
-	result, err := instance.UpdateItem(map[string]string{"id": id}, object, 0, 1)
+	result, err := dbInstance.UpdateItem(map[string]string{"id": id}, object, 0, 1)
 	if err != nil {
 		api.ReturnErr(api.UpdateDbError, ctx, err, response)
 		return
@@ -244,7 +244,7 @@ func PutDbInfoById(ctx iris.Context, path string, object interface{}, special fu
 // object 作为传入传出的结果集 必须是在db中定义的struct对象的slice指针
 func DeleteDb(ctx iris.Context, path string, object interface{}) {
 	response := api.ResponseInit(ctx)
-	instance := Instance.WithContext(ctx)
+	dbInstance := Instance.WithContext(ctx)
 	id := api.GetParams(ctx, "id")
 	if id == "" {
 		api.ReturnErr(api.GetIdError, ctx, fmt.Errorf("id cannot be empty"), response)
@@ -269,7 +269,7 @@ func DeleteDb(ctx iris.Context, path string, object interface{}) {
 			api.ReturnErr(api.ReflectError, ctx, err, response)
 			return
 		}
-		_result, err := instance.DeleteItem(object, 1)
+		_result, err := dbInstance.DeleteItem(object, 1)
 		if err != nil {
 			api.ReturnErr(api.DeleteDbError, ctx, err, response)
 			return

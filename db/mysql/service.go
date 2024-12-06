@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/yuanJewel/go-core/db"
 	"github.com/yuanJewel/go-core/db/object"
 	gologger "github.com/yuanJewel/go-core/logger"
@@ -27,7 +26,14 @@ func (m *Mysql) HasTable(tableName string) bool {
 }
 
 func (m *Mysql) WithContext(ctx context.Context) db.Service {
-	return &Mysql{dbConn: m.dbConn.WithContext(ctx), mysqlConfig: m.mysqlConfig}
+	if m.mysqlConfig.redisInstance == nil {
+		return &Mysql{dbConn: m.dbConn.WithContext(ctx), mysqlConfig: m.mysqlConfig}
+	}
+	return &Mysql{dbConn: m.dbConn.WithContext(ctx), mysqlConfig: &mysqlConfig{
+		maxSearchLimit: m.mysqlConfig.maxSearchLimit,
+		offsetPages:    m.mysqlConfig.maxSearchLimit,
+		redisInstance:  m.mysqlConfig.redisInstance.WithContext(ctx),
+	}}
 }
 
 func (m *Mysql) Preload(query string, args ...interface{}) db.Service {
@@ -70,16 +76,18 @@ func (m *Mysql) Order(order string) db.Service {
 }
 
 func (m *Mysql) OffsetPages(pages int) db.Service {
-	return &Mysql{dbConn: m.dbConn, mysqlConfig: mysqlConfig{
+	return &Mysql{dbConn: m.dbConn, mysqlConfig: &mysqlConfig{
 		maxSearchLimit: m.mysqlConfig.maxSearchLimit,
 		offsetPages:    pages,
+		redisInstance:  m.mysqlConfig.redisInstance,
 	}}
 }
 
 func (m *Mysql) Limit(limit int) db.Service {
-	return &Mysql{dbConn: m.dbConn, mysqlConfig: mysqlConfig{
+	return &Mysql{dbConn: m.dbConn, mysqlConfig: &mysqlConfig{
 		maxSearchLimit: limit,
 		offsetPages:    m.mysqlConfig.offsetPages,
+		redisInstance:  m.mysqlConfig.redisInstance,
 	}}
 }
 
@@ -97,7 +105,10 @@ func (m *Mysql) AddItem(item interface{}, affectRows ...int64) (*gorm.DB, error)
 		transaction.Rollback()
 		return result, err
 	}
-	return result, transaction.Commit().Error
+	if err := transaction.Commit().Error; err != nil {
+		return result, err
+	}
+	return result, m.deleteCache(result)
 }
 
 // UpdateItem input new must be an interface type
@@ -114,7 +125,10 @@ func (m *Mysql) UpdateItem(old interface{}, new interface{}, affectRows ...int64
 		transaction.Rollback()
 		return result, err
 	}
-	return result, transaction.Commit().Error
+	if err := transaction.Commit().Error; err != nil {
+		return result, err
+	}
+	return result, m.deleteCache(result)
 }
 
 // DeleteItem input must be an interface type
@@ -131,7 +145,10 @@ func (m *Mysql) DeleteItem(item interface{}, affectRows ...int64) (*gorm.DB, err
 		transaction.Rollback()
 		return result, err
 	}
-	return result, transaction.Commit().Error
+	if err := transaction.Commit().Error; err != nil {
+		return result, err
+	}
+	return result, m.deleteCache(result)
 }
 
 // GetItems input get must be an interface type
@@ -140,13 +157,18 @@ func (m *Mysql) GetItems(find interface{}, get interface{}) (int64, error) {
 	if err := checkInput(get, reflect.Slice); err != nil {
 		return total, err
 	}
-	result := m.dbConn.Where(find).Model(get).Count(&total).
-		Offset(m.mysqlConfig.offsetPages * m.mysqlConfig.maxSearchLimit).
-		Limit(m.mysqlConfig.maxSearchLimit).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return total, nil
+	templateSql := m.dbConn.Where(find).Model(get)
+	if err := m.queryByCache(templateSql, &total, func(db *gorm.DB) *gorm.DB {
+		return db.Count(&total)
+	}); err != nil {
+		return total, err
 	}
-	return int64(math.Ceil(float64(total) / float64(m.mysqlConfig.maxSearchLimit))), result.Error
+
+	return int64(math.Ceil(float64(total) / float64(m.mysqlConfig.maxSearchLimit))),
+		m.queryByCache(templateSql.Offset(m.mysqlConfig.offsetPages*m.mysqlConfig.maxSearchLimit).
+			Limit(m.mysqlConfig.maxSearchLimit), get, func(db *gorm.DB) *gorm.DB {
+			return db.Find(get)
+		})
 }
 
 // GetAllItems input get must be an interface type
@@ -155,11 +177,16 @@ func (m *Mysql) GetAllItems(find interface{}, get interface{}) (int64, error) {
 	if err := checkInput(get, reflect.Slice); err != nil {
 		return total, err
 	}
-	result := m.dbConn.Where(find).Model(get).Count(&total).Find(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return total, nil
+	templateSql := m.dbConn.Where(find).Model(get)
+	if err := m.queryByCache(templateSql, &total, func(db *gorm.DB) *gorm.DB {
+		return db.Count(&total)
+	}); err != nil {
+		return total, err
 	}
-	return total, result.Error
+
+	return total, m.queryByCache(templateSql, get, func(db *gorm.DB) *gorm.DB {
+		return db.Find(get)
+	})
 }
 
 // GetItem input get must be an interface type
@@ -168,8 +195,14 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 		return false, err
 	}
 
+	var row int64 = 0
 	// Check if the query rule will only get one
-	row := m.dbConn.Model(get).Where(find).Find(&[]struct{}{}).RowsAffected
+	templateSql := m.dbConn.Model(get).Where(find)
+	if err := m.queryByCache(templateSql, &row, func(db *gorm.DB) *gorm.DB {
+		return db.Count(&row)
+	}); err != nil {
+		return false, err
+	}
 	if row > 1 {
 		var funcName = "unknown_function"
 		pc, _, _, ok := runtime.Caller(1)
@@ -180,12 +213,12 @@ func (m *Mysql) GetItem(find interface{}, get interface{}) (bool, error) {
 			funcName, row)
 		return false, object.SelectOverOneError
 	}
-
-	result := m.dbConn.Where(find).First(get)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if row == 0 {
 		return false, nil
 	}
-	return true, result.Error
+	return true, m.queryByCache(templateSql, get, func(db *gorm.DB) *gorm.DB {
+		return db.First(get)
+	})
 }
 
 // checkInput Determine whether the input data is compliant
@@ -201,11 +234,11 @@ func checkInput(input interface{}, kinds ...reflect.Kind) error {
 		if ok {
 			optionName = runtime.FuncForPC(pc).Name()
 		}
-		pc2, pc2_file, pc2_line, ok := runtime.Caller(2)
+		pc2, pc2File, pc2Line, ok := runtime.Caller(2)
 		if ok {
 			funcName = runtime.FuncForPC(pc2).Name()
-			funcFile = pc2_file
-			funcLine = pc2_line
+			funcFile = pc2File
+			funcLine = pc2Line
 		}
 		gologger.Log.WithField("function", funcName).WithField("callerFile", funcFile).
 			WithField("callerLine", funcLine).Errorf("方法 %s 执行 %s , 传入的对象(%s)不合法(*%s)",

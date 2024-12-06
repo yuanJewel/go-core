@@ -1,9 +1,12 @@
 package redis
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // SAdd 向集合添加元素
-func (s *Store) SAdd(key string, members ...interface{}) error {
+func (s *Store) SAdd(key string, expiration time.Duration, members ...interface{}) error {
 	ctx, cancel := s.getContext()
 	if cancel != nil {
 		defer cancel()
@@ -15,7 +18,7 @@ func (s *Store) SAdd(key string, members ...interface{}) error {
 	if err := s.redisInstance.SAdd(ctx, key, members...).Err(); err != nil {
 		return fmt.Errorf("failed to add members to set - key: %s, error: %w", key, err)
 	}
-	return nil
+	return s.expire(key, expiration)
 }
 
 // SMembers 获取集合中的所有元素

@@ -20,7 +20,7 @@ type JobInfo struct {
 type Step struct {
 	ID         string    `gorm:"column:id;type:varchar(255);primary_key" json:"id"`
 	JobId      string    `gorm:"column:job_id;type:varchar(255)" json:"job_id"`
-	Job        Job       `gorm:"foreignKey:JobId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	Job        Job       `gorm:"foreignKey:JobId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"foreign_job"`
 	CreateDate time.Time `gorm:"column:date;type:datetime" json:"date"`
 	StartTime  time.Time `gorm:"column:start_time;type:datetime" json:"start_time"`
 	FinishTime time.Time `gorm:"column:finish_time;type:datetime" json:"finish_time"`

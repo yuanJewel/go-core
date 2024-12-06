@@ -3,6 +3,7 @@ package mysql
 import (
 	"fmt"
 	"github.com/yuanJewel/go-core/config"
+	"github.com/yuanJewel/go-core/db/redis"
 	gologger "github.com/yuanJewel/go-core/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -12,10 +13,11 @@ import (
 
 type Mysql struct {
 	dbConn      *gorm.DB
-	mysqlConfig mysqlConfig
+	mysqlConfig *mysqlConfig
 }
 
 type mysqlConfig struct {
+	redisInstance  *redis.Store
 	maxSearchLimit int
 	offsetPages    int
 }
@@ -44,7 +46,8 @@ func GetMysqlInstance(cfgData *config.DataSourceDetail) (*Mysql, error) {
 	if err != nil {
 		return nil, err
 	}
-	mysqlInstance := &Mysql{dbConn: dbConn, mysqlConfig: mysqlConfig{
+	mysqlInstance := &Mysql{dbConn: dbConn, mysqlConfig: &mysqlConfig{
+		redisInstance:  redis.Instance,
 		maxSearchLimit: cfgData.MaxSearchLimit,
 		offsetPages:    0,
 	}}

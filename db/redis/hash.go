@@ -1,9 +1,12 @@
 package redis
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // HSet 设置哈希表字段的值
-func (s *Store) HSet(key, field string, value interface{}) error {
+func (s *Store) HSet(key, field string, value interface{}, expiration time.Duration) error {
 	ctx, cancel := s.getContext()
 	if cancel != nil {
 		defer cancel()
@@ -15,7 +18,7 @@ func (s *Store) HSet(key, field string, value interface{}) error {
 	if err := s.redisInstance.HSet(ctx, key, field, value).Err(); err != nil {
 		return fmt.Errorf("failed to set hash field - key: %s, field: %s, error: %w", key, field, err)
 	}
-	return nil
+	return s.expire(key, expiration)
 }
 
 // HGet 获取哈希表中指定字段的值
