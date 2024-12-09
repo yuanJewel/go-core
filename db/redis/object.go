@@ -10,6 +10,7 @@ var Instance *Store
 
 type Store struct {
 	ctx           context.Context
+	compress      bool
 	timeout       time.Duration
 	expiration    time.Duration
 	retryDelay    time.Duration

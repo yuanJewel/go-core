@@ -27,6 +27,7 @@ func GetRedisInstance(cfg *config.Redis) (*Store, error) {
 		expiration: time.Duration(cfg.Expiration) * time.Second,
 		retryDelay: time.Duration(cfg.RetryDelay) * time.Millisecond,
 		timeout:    time.Duration(cfg.Timeout) * time.Second,
+		compress:   cfg.IsZip,
 		ctx:        nil,
 	}
 

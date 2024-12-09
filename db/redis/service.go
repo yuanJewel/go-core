@@ -29,6 +29,7 @@ func (s *Store) Ping() error {
 func (s *Store) WithContext(ctx context.Context) *Store {
 	return &Store{
 		ctx:           ctx,
+		compress:      s.compress,
 		expiration:    s.expiration,
 		redisInstance: s.redisInstance,
 		timeout:       s.timeout,

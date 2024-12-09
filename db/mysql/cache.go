@@ -3,7 +3,6 @@ package mysql
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	gologger "github.com/yuanJewel/go-core/logger"
@@ -52,12 +51,12 @@ func (m *Mysql) getCache(db *gorm.DB, key, sqlStr string, dest interface{}) erro
 	cache, err := m.mysqlConfig.redisInstance.Get(key)
 	if err == nil {
 		if cache == identityQueryIsEmpty {
-			gologger.Log.Debugf("[%.3fms] cache hit but is nil: %s", float64(time.Now().UnixMicro()-startTime)/1e3, sqlStr)
+			gologger.Log.Debugf("[%.3fms] cache hit(%s) but is nil: %s", float64(time.Now().UnixMicro()-startTime)/1e3, key, sqlStr)
 			return nil
 		}
-		err = json.Unmarshal([]byte(cache), dest)
+		err = m.mysqlConfig.redisInstance.Unmarshal([]byte(cache), dest)
 		if err == nil {
-			gologger.Log.Debugf("[%.3fms] cache hit: %s", float64(time.Now().UnixMicro()-startTime)/1e3, sqlStr)
+			gologger.Log.Debugf("[%.3fms] cache hit(%s): %s", float64(time.Now().UnixMicro()-startTime)/1e3, key, sqlStr)
 			return nil
 		}
 	}
@@ -73,8 +72,9 @@ func (m *Mysql) addCache(db *gorm.DB, key, sqlStr string, dest interface{}) {
 	}
 
 	var data string
+	startTime := time.Now().UnixMicro()
 	if dest != identityQueryIsEmpty {
-		v, err := json.Marshal(dest)
+		v, err := m.mysqlConfig.redisInstance.Marshal(dest)
 		if err == nil {
 			data = string(v)
 		} else {
@@ -97,7 +97,7 @@ func (m *Mysql) addCache(db *gorm.DB, key, sqlStr string, dest interface{}) {
 		}
 	}
 
-	gologger.Log.Debugf("success to add cache(%s): %s", key, sqlStr)
+	gologger.Log.Debugf("[%.3fms] success to add cache(%s): %s", float64(time.Now().UnixMicro()-startTime)/1e3, key, sqlStr)
 }
 
 func (m *Mysql) deleteCache(db *gorm.DB) error {

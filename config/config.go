@@ -49,4 +49,5 @@ type Redis struct {
 	Timeout    int    `default:"5" yaml:"timeout" env:"redis.timeout"`
 	Expiration int    `default:"600" yaml:"expiration" env:"redis.expiration"`
 	RetryDelay int    `default:"100" yaml:"retry_delay_ms" env:"redis.retry_delay_ms"`
+	IsZip      bool   `default:"false" yaml:"is_zip" env:"redis.is_zip"`
 }
