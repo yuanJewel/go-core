@@ -28,16 +28,18 @@
   - 支持日志文件自动切割，滚动迭代，按日期归档。
   - 数据库、api日志都可以定义和配置，包括debug级别的日志。
 
-### 任务模块封装
+### 任务
   - 支持任务自定义，支持任务串行、并行，支持定时任务，支持消息队列，支持分布式任务。
   - 支持任务日志，有全链路任务监控，支持任务执行耗时统计。
   - 考虑了分布式安全，分布式锁，避免任务重复执行。
   - 对缓存数据制定了基本的回收规则，保障资源利用最大化。
   - 支持任务重试，任务失败可以重试，支持任务限流，避免任务过载。
   - 支持任务告警，可以实时监控任务执行情况。
+  - 支持分布式下的变量传递，并完成资源回收。
 
-### 配置模块封装
+### 配置
   - 支持yaml和json两种格式，支持环境变量覆盖。
+  - 在使用中引用 `BasicConfig` 类的时候需要添加yaml参数，可仿照 `pkg/config` 进行添加。
 
 ## 使用方法
 
@@ -76,16 +78,30 @@ make run    # 运行任务
 
 ### 环境变量
 
-- `RECORD_DATA`: 是否开启数据记录，默认为true
-- `CHECK_TABLE_EXISTS`: 是否检查表是否存在，(需要数据库高级权限)，默认为false
+- `RECORD_DATA`: 是否开启数据记录
+  - `true`: 开启数据记录(默认)
+  - `false`: 关闭数据记录
+- `CHECK_TABLE_EXISTS`: 是否检查表是否存在
+  - `true`: 检查表是否存在，该功能需要数据库高级权限(默认)
+  - `false`: 不检查表是否存在
 - `LOGGER_RETAIN_NUMBER`: 日志文件保留个数，默认为3
-- `LOGGER_FILE_SIZE`: 日志文件最大大小，默认为50M
+- `LOGGER_FILE_SIZE`: 日志文件最大大小，单位为Mb，默认为50
 - `LOGGER_ROOT_PATH`: 日志文件存放位置，默认为`./logs`
-- `LOGGER_OUT_STYLE`: 日志输出方式，默认为`file`，可以选择`stdout`不输出到文件
-- `LOGGER_ACCESS_OUT_STYLE`: api访问日志输出格式，默认为`file`，可以选择`stdout`不输出到文件
-- `LOGGER_OUT_LEVEL`: 日志输出级别，默认为`info`
+- `LOGGER_OUT_STYLE`: 日志输出方式
+  - `file`: 输出到文件(默认)
+  - `stdout`: 输出到控制台
+- `LOGGER_ACCESS_OUT_STYLE`: api访问日志输出格式
+  - `file`: 输出到文件(默认)
+  - `stdout`: 输出到控制台
+- `LOGGER_OUT_LEVEL`: 日志输出级别
+  - `info`: 输出信息级别的日志(默认)
+  - `warn`: 输出警告及以上级别日志
+  - `error`: 输出错误及以上级别日志
+  - `debug`: 输出调试及以上级别日志
 
 ### 配置基础格式
+
+可以查看 `config/object.go` 代码查看必须的配置信息，部分配置有默认值可以不填写
 
 ```yaml
 apiVersion: v1
@@ -103,7 +119,11 @@ auth:
 redis:
   host: 
   db: 
-  password: 
+  password:
+  pool_size: 10
+  timeout: 5
+  expiration: 600
+  retry_delay_ms: 100
   is_zip: true
 
 db:

@@ -11,13 +11,13 @@ import (
 var Instance db.Service
 
 // InitDb global variables are used to connect to the database by default.
-func InitDb(cfgData *config.DataSourceDetail) (err error) {
+func InitDb(cfgData *config.Db) (err error) {
 	Instance, err = GetDb(cfgData)
 	return
 }
 
 // GetDb Get the DataBase instance, the default is mysql
-func GetDb(cfgData *config.DataSourceDetail) (instance db.Service, err error) {
+func GetDb(cfgData *config.Db) (instance db.Service, err error) {
 	cmdbDriver := cfgData.Driver
 	switch strings.ToLower(cmdbDriver) {
 	case "oracle":

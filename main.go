@@ -31,7 +31,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.5.2
+// @version 1.5.3
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 
@@ -59,7 +59,7 @@ func main() {
 	}{
 		{"配置", func() error { return config.LoadConfig(*configPath) }},
 		{"缓存", func() error { return redis.InitRedis(&config.GlobalConfig.Redis) }},
-		{"数据库", func() error { return service.InitDb(&config.GlobalConfig.DataSourceDetail) }},
+		{"数据库", func() error { return service.InitDb(&config.GlobalConfig.Db) }},
 	}
 
 	for _, svc := range initServices {
@@ -76,11 +76,11 @@ func main() {
 		return
 	}
 
-	app, _close := apiInterface.CreateApi(&api.Object{}, config.GlobalConfig.Swagger)
+	app, _close := apiInterface.CreateApi(&api.Object{}, config.GlobalConfig.Server.Swagger)
 	app.Configure(iris.WithConfiguration(iris.Configuration{
-		Timeout:           time.Duration(config.GlobalConfig.HttpTimeout) * time.Second,
-		LogLevel:          config.GlobalConfig.LogLevel,
-		DisableStartupLog: config.GlobalConfig.DisableStartupLog,
+		Timeout:           time.Duration(config.GlobalConfig.Server.HttpTimeout) * time.Second,
+		LogLevel:          config.GlobalConfig.Server.LogLevel,
+		DisableStartupLog: config.GlobalConfig.Server.DisableStartupLog,
 	}))
 	defer func() {
 		_ = _close()

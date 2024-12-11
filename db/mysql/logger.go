@@ -15,7 +15,7 @@ import (
 const (
 	logTraceStr     = "[%.3fms] [rows:%v] %s"
 	logTraceWarnStr = "%s [%.3fms] [rows:%v] %s"
-	logTraceErrStr  = "%s [3fms] [rows:%v] %s"
+	logTraceErrStr  = "%s [%.3fms] [rows:%v] %s"
 )
 
 func getTraceId(ctx context.Context) string {
@@ -32,9 +32,9 @@ type logger struct {
 
 // LogMode log mode
 func (l *logger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
-	newlogger := *l
-	newlogger.LogLevel = level
-	return &newlogger
+	newLogger := *l
+	newLogger.LogLevel = level
+	return &newLogger
 }
 
 // Info print info

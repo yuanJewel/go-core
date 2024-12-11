@@ -25,26 +25,24 @@ var (
 )
 
 func InitWork(task Task, taskMap map[string]interface{}, f FinishInterface) (err error) {
-	rabbitmq := task.RabbitMq
-	redisConf := task.Redis
 	lockExpiration = time.Duration(task.LockExpiration) * time.Second
 	varExpiration = time.Duration(task.VarExpiration) * time.Second
 	finishExpiration = time.Duration(task.ResultsExpiration) * time.Second
 	stepToJob = sync.Map{}
 	machineryInstance, err = machinery.NewServer(&config.Config{
-		Broker:          fmt.Sprintf("amqp://%s:%s@%s:%s", rabbitmq.Username, rabbitmq.Password, rabbitmq.Host, rabbitmq.Port),
-		DefaultQueue:    rabbitmq.Queue,
-		ResultBackend:   fmt.Sprintf("redis://%s@%s:%s/%d", redisConf.Password, redisConf.Host, redisConf.Port, redisConf.Db),
+		Broker:          fmt.Sprintf("amqp://%s:%s@%s:%s", task.RabbitMq.Username, task.RabbitMq.Password, task.RabbitMq.Host, task.RabbitMq.Port),
+		DefaultQueue:    task.RabbitMq.Queue,
+		ResultBackend:   fmt.Sprintf("redis://%s@%s:%s/%d", task.Redis.Password, task.Redis.Host, task.Redis.Port, task.Redis.Db),
 		ResultsExpireIn: task.ResultsExpiration,
 		Redis: &config.RedisConfig{
-			MaxIdle:      redisConf.PoolSize,
-			ReadTimeout:  redisConf.Timeout,
-			WriteTimeout: redisConf.Timeout,
+			MaxIdle:      task.Redis.PoolSize,
+			ReadTimeout:  task.Redis.Timeout,
+			WriteTimeout: task.Redis.Timeout,
 		},
 		AMQP: &config.AMQPConfig{
-			Exchange:      rabbitmq.Exchange,
+			Exchange:      task.RabbitMq.Exchange,
 			ExchangeType:  "direct",
-			BindingKey:    rabbitmq.Queue,
+			BindingKey:    task.RabbitMq.Queue,
 			PrefetchCount: task.Concurrency,
 		},
 	})
@@ -52,18 +50,18 @@ func InitWork(task Task, taskMap map[string]interface{}, f FinishInterface) (err
 		return
 	}
 
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(rabbitmq.Host, rabbitmq.Port), 3*time.Second)
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(task.RabbitMq.Host, task.RabbitMq.Port), 3*time.Second)
 	if err != nil || conn == nil {
-		return fmt.Errorf("cannot connect rabbitmq(%s:%s), error: %v", rabbitmq.Host, rabbitmq.Port, err)
+		return fmt.Errorf("cannot connect task.RabbitMq(%s:%s), error: %v", task.RabbitMq.Host, task.RabbitMq.Port, err)
 	}
 	_ = conn.Close()
-	conn, err = net.DialTimeout("tcp", net.JoinHostPort(redisConf.Host, redisConf.Port), 3*time.Second)
+	conn, err = net.DialTimeout("tcp", net.JoinHostPort(task.Redis.Host, task.Redis.Port), 3*time.Second)
 	if err != nil || conn == nil {
-		return fmt.Errorf("cannot connect redis(%s:%s), error: %v", redisConf.Host, redisConf.Port, err)
+		return fmt.Errorf("cannot connect redis(%s:%s), error: %v", task.Redis.Host, task.Redis.Port, err)
 	}
 	_ = conn.Close()
 
-	redisInstance, err = redis.GetRedisInstance(&redisConf)
+	redisInstance, err = redis.GetRedisInstance(&task.Redis)
 	if err != nil {
 		return
 	}

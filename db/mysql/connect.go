@@ -22,7 +22,7 @@ type mysqlConfig struct {
 	offsetPages    int
 }
 
-func GetMysqlInstance(cfgData *config.DataSourceDetail) (*Mysql, error) {
+func GetMysqlInstance(cfgData *config.Db) (*Mysql, error) {
 	logLevel := gormlogger.Warn
 	if gologger.Log.Logger.GetLevel() < 3 {
 		logLevel = gormlogger.LogLevel(gologger.Log.Logger.GetLevel())

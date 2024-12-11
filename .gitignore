@@ -31,3 +31,4 @@ Thumbs.db
 
 # 配置目录
 application.yml
+application.json

@@ -150,7 +150,7 @@ func getAffectTable(db *gorm.DB) []string {
 	for _, j := range db.Statement.Joins {
 		tmp[extractTableName(j.Name)] = true
 	}
-	for preload, _ := range db.Statement.Preloads {
+	for preload := range db.Statement.Preloads {
 		if db.Statement.Schema != nil {
 			if relation, ok := db.Statement.Schema.Relationships.Relations[preload]; ok {
 				tmp[relation.FieldSchema.Table] = true
