@@ -31,7 +31,7 @@ func (m *Mysql) WithContext(ctx context.Context) db.Service {
 	}
 	return &Mysql{dbConn: m.dbConn.WithContext(ctx), mysqlConfig: &mysqlConfig{
 		maxSearchLimit: m.mysqlConfig.maxSearchLimit,
-		offsetPages:    m.mysqlConfig.maxSearchLimit,
+		offsetPages:    m.mysqlConfig.offsetPages,
 		redisInstance:  m.mysqlConfig.redisInstance.WithContext(ctx),
 	}}
 }
