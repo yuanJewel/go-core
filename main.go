@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/yuanJewel/go-core/db/redis"
 	"log"
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/kataras/iris/v12"
 	"github.com/prometheus/common/version"
+
 	apiInterface "github.com/yuanJewel/go-core/api"
 	"github.com/yuanJewel/go-core/asset"
+	"github.com/yuanJewel/go-core/db/redis"
 	"github.com/yuanJewel/go-core/db/service"
 	_ "github.com/yuanJewel/go-core/docs"
 	"github.com/yuanJewel/go-core/logger"
@@ -31,7 +32,7 @@ func init() {
 }
 
 // @title Swagger yuanJewel go-core API
-// @version 1.5.4
+// @version 1.5.5
 // @description yuanJewel go-core API
 // @contact.name yuanJewel go-core Support
 

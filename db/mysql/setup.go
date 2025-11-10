@@ -17,19 +17,19 @@ func (m *Mysql) Setup(models []interface{}) error {
 
 	err := m.dbConn.AutoMigrate(models...)
 	if err != nil {
-		for _, modle := range models {
-			if !m.dbConn.Migrator().HasTable(modle) {
-				notExistTables = append(notExistTables, modle)
+		for _, model := range models {
+			if !m.dbConn.Migrator().HasTable(model) {
+				notExistTables = append(notExistTables, model)
 			} else {
 				// https://gorm.io/docs/migration.html#Migrator-Interface
 				// gorm officially does not have the ability to alert table, it needs to be implemented independently
 				// Currently only new fields are supported
-				_db := reflect.TypeOf(modle)
+				_db := reflect.TypeOf(model)
 				for i := 0; i < _db.NumField(); i++ {
-					_columnname := _db.Field(i).Name
-					if !m.dbConn.Migrator().HasColumn(modle, _columnname) {
-						gologger.Log.Infof("修改表 %s 新增字段 %s", _db.Name(), _columnname)
-						if err := m.dbConn.Migrator().AddColumn(modle, _columnname); err != nil {
+					_columnName := _db.Field(i).Name
+					if !m.dbConn.Migrator().HasColumn(model, _columnName) {
+						gologger.Log.Infof("修改表 %s 新增字段 %s", _db.Name(), _columnName)
+						if err := m.dbConn.Migrator().AddColumn(model, _columnName); err != nil {
 							return err
 						}
 					}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/context"
 	"github.com/yuanJewel/go-core/logger"
 	"io"
 	"net/http"
@@ -107,6 +108,10 @@ func ReverserUtil(ctx iris.Context, response *Response, method, path string) (in
 		}
 	}
 	return code, body
+}
+
+func EmptyCtx() iris.Context {
+	return context.NewContext(iris.New())
 }
 
 func UnmarshalResponse(body []byte) (*Response, error) {
